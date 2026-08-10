@@ -7,10 +7,19 @@ Curso de JavaScript · Carrera de Desarrollo de Aplicaciones · Coderhouse.
 
 ```
 sociedad-patitas-preentrega2/
-├── index.html    # enlaza el script: <script src="js/main.js" defer></script>
+├── index.html      # enlaza el CSS y el script con defer
+├── css/
+│   └── styles.css  # estilos de la página
 ├── js/
-│   └── main.js   # toda la lógica de control de flujo
+│   └── main.js     # toda la lógica de control de flujo
 └── README.md
+```
+
+Vinculación en el `<head>` del HTML:
+
+```html
+<link rel="stylesheet" href="css/styles.css">
+<script src="js/main.js" defer></script>
 ```
 
 ## Cómo se usa
