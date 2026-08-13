@@ -1,4 +1,4 @@
-# 🐾 Sociedad Patitas — Pre-Entrega 2
+# 🐾 Sociedad Patitas — Pre-Entrega 3
 
 Simulador de solicitud de adopción del refugio **Sociedad Patitas**.
 Curso de JavaScript · Carrera de Desarrollo de Aplicaciones · Coderhouse.
@@ -6,7 +6,7 @@ Curso de JavaScript · Carrera de Desarrollo de Aplicaciones · Coderhouse.
 ## Estructura
 
 ```
-sociedad-patitas-preentrega2/
+sociedad-patitas-js/
 ├── index.html      # enlaza el CSS y el script con defer
 ├── css/
 │   └── styles.css  # estilos de la página
