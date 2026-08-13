@@ -42,3 +42,35 @@ Evalúa si una persona está en condiciones de adoptar un rescatado:
    - **0 a 6** → RECHAZADA
 6. Da una recomendación de tamaño de mascota según el espacio disponible.
 7. Permite repetir la simulación y muestra un resumen final de la sesión.
+
+## Funciones del simulador
+
+El script sigue el algoritmo básico de todo programa:
+**entrada de datos → procesamiento → salida de resultados.**
+
+### 1. Entrada de datos
+
+| Función | Tipo | Parámetros | Retorna |
+|---|---|---|---|
+| `pedirTexto` | Declarada | `mensaje`, `largoMinimo` | El texto validado, o `""` si falla |
+| `pedirNumeroEntero` | Declarada | `mensaje`, `minimo`, `maximo` | El número validado, o `0` si falla |
+| `pedirRespuestaSiNo` | Declarada | `pregunta`, `numero`, `total` | `"si"`, `"no"` o `""` |
+
+### 2. Procesamiento
+
+| Función | Tipo | Parámetros | Retorna |
+|---|---|---|---|
+| `obtenerVivienda` | Declarada | `opcion` | Un **objeto** `{ nombre, puntos }` |
+| `clasificarSolicitud` | **Expresada** | `puntaje` | `"APROBADA"`, `"PREAPROBADA"` o `"RECHAZADA"` |
+| `obtenerRecomendacion` | Declarada | `puntosVivienda` | Texto con la recomendación |
+| `esAfirmativa` | **Flecha** | `texto` | `true` o `false` |
+| `esNegativa` | **Flecha** | `texto` | `true` o `false` |
+| `puntosQueFaltan` | **Flecha** | `puntaje`, `minimo` | Cuántos puntos faltaron |
+
+### 3. Salida de resultados
+
+| Función | Tipo | Parámetros | Retorna |
+|---|---|---|---|
+| `mostrarEncabezado` | Declarada | `numero` | Nada: solo muestra |
+| `mostrarResultado` | Declarada | `nombre`, `puntaje`, `maximo`, `estado` | Nada: solo muestra |
+| `mostrarResumen` | Declarada | `evaluadas`, `aprobadas` | Nada: solo muestra |
