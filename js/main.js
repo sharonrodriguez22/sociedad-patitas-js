@@ -1,16 +1,21 @@
 /* ============================================================
    SOCIEDAD PATITAS - Simulador de solicitud de adopción
-   Pre-Entrega 3: Funciones e integración de lógica
+   Pre-Entrega 4: Uso e interacción con Arrays
 
    Tipos de función usados:
    - Declaradas:  function nombre(...) { ... }
    - Expresada:   const nombre = function(...) { ... }
    - Flecha:      const nombre = (...) => ...
+
+   Métodos de array usados:
+   push, unshift, pop, includes, indexOf y splice
    ============================================================ */
 
-// ------------------------------------------------------------
-// 1) CONSTANTES: valores que no cambian durante el programa
-// ------------------------------------------------------------
+// ============================================================
+// VARIABLES GLOBALES
+// Están declaradas fuera de toda función, así que se pueden
+// leer desde cualquier parte del código.
+// ============================================================
 const REFUGIO = "Sociedad Patitas";
 const EDAD_MINIMA = 18;
 const EDAD_MAXIMA = 100;
@@ -20,9 +25,9 @@ const PUNTOS_POR_SI = 2;
 const PUNTAJE_MAXIMO = 13; // 3 de vivienda + 5 preguntas x 2 puntos
 const PUNTAJE_APROBADO = 11;
 const PUNTAJE_SEGUIMIENTO = 7;
-const MAX_SOLICITUDES = 10; // tope del bucle principal
+const MAX_SOLICITUDES = 10; // tope de seguridad del bucle principal
 
-// LISTA FIJA: las preguntas del cuestionario.
+// Lista fija de preguntas. La recorro con un for usando .length
 const PREGUNTAS = [
   "¿Puedes cubrir gastos de comida, vacunas y veterinario?",
   "¿Hay alguien en casa durante buena parte del día?",
@@ -30,6 +35,19 @@ const PREGUNTAS = [
   "¿Todas las personas que viven contigo están de acuerdo?",
   "¿Te comprometes a castrar al animal y recibir una visita de seguimiento?"
 ];
+
+// LISTA DE RESCATADOS DISPONIBLES PARA ADOPTAR.
+// Va cambiando durante el día: entran rescatados nuevos y salen los adoptados.
+// Está declarada con const porque la variable nunca se reasigna:
+// lo que cambia es el contenido del array, no la variable en sí.
+// "Sin nombre" es un rescatado que todavía no fue bautizado.
+const rescatados = ["Rocco", "Luna", "Sin nombre", "Nube", "Tobías"];
+
+// Datos de los movimientos del día
+const CASO_URGENTE = "Nina";
+const INGRESO_NUEVO = "Milo";
+const NOMBRE_PROVISORIO = "Sin nombre";
+const NOMBRE_DEFINITIVO = "Pelusa";
 
 const MENU_VIVIENDA =
   "¿En qué tipo de vivienda vives?\n\n" +
@@ -46,7 +64,6 @@ let solicitudesAprobadas = 0;
 
 /* ============================================================
    FUNCIONES FLECHA
-   Resuelven procesos simples en una sola línea.
    ============================================================ */
 
 // Parámetro: texto. Retorna true o false.
@@ -68,7 +85,7 @@ const puntosQueFaltan = (puntaje, minimo) => minimo - puntaje;
 // Declarada. Parámetros: mensaje y largoMinimo. Retorna un texto.
 function pedirTexto(mensaje, largoMinimo) {
   // "valor" e "intentos" son variables LOCALES: solo existen
-  // acá adentro y se reinician en cada llamada a la función
+  // aquí adentro y se reinician en cada llamada a la función
   let valor = "";
   let intentos = 0;
 
@@ -181,7 +198,7 @@ const clasificarSolicitud = function (puntaje) {
   return estado;
 };
 
-// Declarada. Parámetros: puntos de vivienda. Retorna una recomendación.
+// Declarada. Parámetro: puntos de vivienda. Retorna una recomendación.
 function obtenerRecomendacion(puntosVivienda) {
   let texto = "";
 
@@ -197,9 +214,115 @@ function obtenerRecomendacion(puntosVivienda) {
 }
 
 /* ============================================================
-   3) FUNCIONES DE SALIDA
-   Muestran resultados por consola y por alert. Comunican.
+   3) FUNCIONES DE GESTIÓN DE LA LISTA DE RESCATADOS
+   Trabajan sobre el array que reciben por parámetro.
    ============================================================ */
+
+// Declarada. Parámetros: lista y nombre.
+// push() agrega el nuevo rescatado AL FINAL de la lista.
+// Retorna cuántos rescatados quedaron.
+function registrarIngreso(lista, nombre) {
+  lista.push(nombre);
+  console.log("🐾 Ingresó " + nombre + " al refugio. Ahora hay " + lista.length + " rescatados.");
+  return lista.length;
+}
+
+// Declarada. Parámetros: lista y nombre.
+// unshift() lo agrega AL PRINCIPIO, porque los casos urgentes
+// tienen prioridad para conseguir hogar.
+// Retorna cuántos rescatados quedaron.
+function registrarUrgencia(lista, nombre) {
+  lista.unshift(nombre);
+  console.log("🚑 " + nombre + " entró como caso urgente y quedó primero en la lista.");
+  return lista.length;
+}
+
+// Declarada. Parámetro: lista.
+// pop() saca el ÚLTIMO elemento y lo devuelve.
+// Retorna el nombre del rescatado que salió.
+function registrarAdopcion(lista) {
+  const adoptado = lista.pop();
+  console.log("Se ha eliminado el elemento: " + adoptado);
+  console.log("   (se fue con su nueva familia 🏡)");
+  return adoptado;
+}
+
+// Declarada. Parámetros: lista y nombre.
+// includes() responde true o false. indexOf() dice la posición.
+// Retorna el índice, o -1 si el rescatado no está en la lista.
+function buscarRescatado(lista, nombre) {
+  let indice = -1;
+
+  if (lista.includes(nombre)) {
+    indice = lista.indexOf(nombre);
+  }
+
+  return indice;
+}
+
+// Declarada. Parámetros: lista y nombre.
+// includes() e indexOf() comparan de forma EXACTA, así que "nina"
+// no coincidiría con "Nina". Para que no importen las mayúsculas,
+// armo una copia de la lista en minúsculas y busco sobre esa copia.
+// Retorna el índice, o -1 si el rescatado no está en la lista.
+function buscarRescatado(lista, nombre) {
+  let indice = -1;
+  const listaEnMinusculas = [];
+
+  for (const rescatado of lista) {
+    listaEnMinusculas.push(rescatado.toLowerCase());
+  }
+
+  // trim() saca los espacios de más que puedan quedar al escribir
+  const buscado = nombre.trim().toLowerCase();
+
+  if (listaEnMinusculas.includes(buscado)) {
+    indice = listaEnMinusculas.indexOf(buscado);
+  }
+
+  return indice;
+}
+
+// Declarada. Parámetros: lista, indice y nuevoNombre.
+// splice(indice, 1, nuevoNombre) borra 1 elemento en esa posición
+// y pone el nuevo en su lugar.
+// Retorna el nombre que tenía antes.
+function corregirNombre(lista, indice, nuevoNombre) {
+  const anterior = lista[indice];
+
+  lista.splice(indice, 1, nuevoNombre);
+  console.log("✏️ Posición " + indice + ": \"" + anterior + "\" pasó a llamarse \"" + nuevoNombre + "\".");
+
+  return anterior;
+}
+
+/* ============================================================
+   4) FUNCIONES DE SALIDA
+   Muestran resultados por consola y por alert.
+   ============================================================ */
+
+// Declarada. Parámetro: lista.
+// Recorre el array con for...of, que en cada vuelta entrega
+// directamente el VALOR del elemento (no su índice).
+// Retorna un texto con un rescatado por línea, para poder mostrarlo
+// tanto en la consola como dentro de un prompt o un alert y así el usuario pueda verlo.
+function armarTextoRescatados(lista) {
+  let texto = "";
+
+  for (const rescatado of lista) {
+    texto = texto + "• Rescatado: " + rescatado + "\n";
+  }
+
+  return texto;
+}
+
+// Declarada. Parámetro: lista.
+// Invoca a armarTextoRescatados y muestra el resultado por consola.
+function mostrarRescatados(lista) {
+  console.log("");
+  console.log("🏠 Rescatados disponibles en " + REFUGIO + " (" + lista.length + "):");
+  console.log(armarTextoRescatados(lista));
+}
 
 // Declarada. Parámetros: nombre, puntaje, maximo y estado.
 function mostrarResultado(nombre, puntaje, maximo, estado) {
@@ -229,14 +352,15 @@ function mostrarEncabezado(numero) {
   console.log("===============================");
 }
 
-// Declarada. Parámetros: evaluadas y aprobadas.
-function mostrarResumen(evaluadas, aprobadas) {
+// Declarada. Parámetros: evaluadas, aprobadas y lista.
+function mostrarResumen(evaluadas, aprobadas, lista) {
   console.log("");
   console.log("===============================");
   console.log("RESUMEN DE LA SESIÓN");
   console.log("===============================");
   console.log("Solicitudes evaluadas: " + evaluadas);
   console.log("Aprobadas o preaprobadas: " + aprobadas);
+  console.log("Rescatados que siguen esperando hogar: " + lista.length);
 
   if (aprobadas > 0) {
     console.log("🎉 ¡Gracias por adoptar en " + REFUGIO + "!");
@@ -244,17 +368,57 @@ function mostrarResumen(evaluadas, aprobadas) {
     console.log("🐾 Gracias por tu interés en " + REFUGIO + ". Te esperamos.");
   }
 
-  alert("Simulador finalizado.\n\nEvaluadas: " + evaluadas + "\nAprobadas o preaprobadas: " + aprobadas + "\n\n¡Gracias por pasar por " + REFUGIO + "! 🐾");
+  alert("Simulador finalizado.\n\nEvaluadas: " + evaluadas + "\nAprobadas o preaprobadas: " + aprobadas + "\nRescatados esperando hogar: " + lista.length + "\n\n¡Gracias por pasar por " + REFUGIO + "! 🐾");
 }
 
 /* ============================================================
    PROGRAMA PRINCIPAL
-   Acá invoqué las funciones definidas arriba.
+   Aquí se invocan las funciones definidas arriba.
    ============================================================ */
 
 console.log("🐾 Simulador de adopción de " + REFUGIO);
 alert("🐾 " + REFUGIO + "\n\nVamos a simular tu solicitud de adopción.\nAbre la consola con F12 para ver el detalle.");
 
+// ------------------------------------------------------------
+// MOVIMIENTOS DEL REFUGIO DE HOY
+// Antes de abrir las solicitudes, se actualiza la lista de rescatados
+// ------------------------------------------------------------
+console.log("");
+console.log("--- Movimientos del refugio de hoy ---");
+console.log("Lista al abrir: " + rescatados.length + " rescatados");
+
+// Guardo lo que retorna cada función para armar después el resumen
+registrarUrgencia(rescatados, CASO_URGENTE);    // unshift: entra al principio
+const adoptado = registrarAdopcion(rescatados); // pop: sale el último
+registrarIngreso(rescatados, INGRESO_NUEVO);    // push: entra al final
+
+// CADENA DE FUNCIONES: buscarRescatado retorna el índice y ese
+// índice entra como argumento en corregirNombre
+const indiceSinNombre = buscarRescatado(rescatados, NOMBRE_PROVISORIO);
+let textoBautizo = "";
+
+if (indiceSinNombre !== -1) {
+  // corregirNombre usa splice y retorna el nombre que tenía antes
+  const anterior = corregirNombre(rescatados, indiceSinNombre, NOMBRE_DEFINITIVO);
+  textoBautizo = "✏️ \"" + anterior + "\" ya tiene nombre: " + NOMBRE_DEFINITIVO + ".\n";
+}
+
+mostrarRescatados(rescatados); // for...of por consola
+
+// El mismo resumen se muestra por alert, para quien no tenga la consola abierta
+alert(
+  "📋 Movimientos del refugio de hoy\n\n" +
+  "🚑 " + CASO_URGENTE + " ingresó como caso urgente y quedó primero.\n" +
+  "🏡 Se ha eliminado el elemento: " + adoptado + " (fue adoptado).\n" +
+  "🐾 " + INGRESO_NUEVO + " ingresó al refugio.\n" +
+  textoBautizo +
+  "\n🏠 Rescatados esperando hogar (" + rescatados.length + "):\n\n" +
+  armarTextoRescatados(rescatados)
+);
+
+// ============================================================
+// BUCLE PRINCIPAL (do...while)
+// ============================================================
 do {
   // Variables LOCALES de cada vuelta del bucle
   let tipoVivienda = "";
@@ -265,7 +429,7 @@ do {
   mostrarEncabezado(solicitudesEvaluadas + 1);
 
   // ----- ENTRADA: nombre -----
-  // El return de pedirTexto se guarda acá y después viaja como
+  // El return de pedirTexto se guarda aquí y después viaja como
   // argumento a pedirNumeroEntero y a mostrarResultado
   const nombre = pedirTexto("Ingresa tu nombre y apellido:", LARGO_MINIMO_NOMBRE);
 
@@ -306,14 +470,14 @@ do {
     while (puntosVivienda === 0 && intentosVivienda < MAX_INTENTOS) {
       const opcion = prompt(MENU_VIVIENDA);
 
-      // Una sola llamada devuelve el objeto con los dos datos
+      // Una sola llamada me devuelve el objeto con los dos datos
       const vivienda = obtenerVivienda(opcion);
       puntosVivienda = vivienda.puntos;
 
       if (puntosVivienda === 0) {
         intentosVivienda++;
         console.log("❌ Opción inválida. Intentos restantes: " + (MAX_INTENTOS - intentosVivienda));
-        alert("Opción inválida. Elije un número del 1 al 4.");
+        alert("Opción inválida. Elige un número del 1 al 4.");
       } else {
         tipoVivienda = vivienda.nombre;
         puntaje = puntaje + puntosVivienda;
@@ -357,11 +521,35 @@ do {
     mostrarResultado(nombre, puntaje, PUNTAJE_MAXIMO, estado);
 
     // Otra cadena: los puntos que retornó obtenerVivienda alimentan
-    // directamente a obtenerRecomendacion
+    // a obtenerRecomendacion
     console.log("💡 Recomendación: " + obtenerRecomendacion(puntosVivienda));
 
     if (estado !== "RECHAZADA") {
       solicitudesAprobadas++;
+
+      // ----- BÚSQUEDA EN LA LISTA DE RESCATADOS -----
+      mostrarRescatados(rescatados);
+
+      // El texto de la lista va DENTRO del prompt, para que la persona
+      // vea los nombres disponibles en el mismo cuadro donde va a escribir
+      const buscado = prompt(
+        "🏠 Rescatados disponibles en " + REFUGIO + " (" + rescatados.length + "):\n\n" +
+        armarTextoRescatados(rescatados) +
+        "\n¿Quieres consultar por alguno?\nEscribe su nombre tal como aparece (o Cancelar para omitir):"
+      );
+
+      if (buscado !== null && buscado !== "") {
+        // buscarRescatado usa includes() e indexOf() por dentro
+        const posicion = buscarRescatado(rescatados, buscado);
+
+        if (posicion === -1) {
+          console.log("❌ " + buscado + " no está en la lista de disponibles.");
+          alert("❌ " + buscado + " no figura entre nuestros rescatados disponibles.");
+        } else {
+          console.log("✅ " + buscado + " está disponible, en la posición " + posicion + " de la lista.");
+          alert("✅ ¡" + buscado + " está disponible!\n\nEstá en la posición " + posicion + " de la lista de espera.");
+        }
+      }
     }
   } else {
     console.log("🔒 Solicitud cancelada o incompleta. No se pudo evaluar.");
@@ -383,4 +571,4 @@ do {
 } while (seguirSimulando && solicitudesEvaluadas < MAX_SOLICITUDES);
 
 // ----- SALIDA final, una vez terminado el bucle -----
-mostrarResumen(solicitudesEvaluadas, solicitudesAprobadas);
+mostrarResumen(solicitudesEvaluadas, solicitudesAprobadas, rescatados);
