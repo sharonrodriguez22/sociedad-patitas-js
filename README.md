@@ -1,4 +1,4 @@
-# 🐾 Sociedad Patitas — Pre-Entrega 4
+# 🐾 Sociedad Patitas — Pre-Entrega 5
 
 Simulador de solicitud de adopción del refugio **Sociedad Patitas**.
 Curso de JavaScript · Carrera de Desarrollo de Aplicaciones · Coderhouse.
@@ -28,81 +28,170 @@ Vinculación en el `<head>` del HTML:
 2. Abrir la consola con `F12` → pestaña **Console**.
 3. Responder las ventanas emergentes.
 
-## Qué hace el simulador
+## Corrección de la devolución anterior
 
-Evalúa si una persona está en condiciones de adoptar un rescatado:
+En la Pre-Entrega 4 la función `buscarRescatado` estaba declarada **dos veces**:
+la segunda definición pisaba a la primera, así que la primera era código muerto.
+Quedó una sola versión, la que compara sin distinguir mayúsculas.
 
-1. Valida el nombre (máximo 3 intentos).
-2. Valida la edad (máximo 3 intentos) y rechaza a menores de 18.
-3. Pide el tipo de vivienda con un menú de 4 opciones fijas → suma de 1 a 3 puntos.
-4. Recorre un cuestionario de 5 preguntas sí/no → 2 puntos por cada "sí".
-5. Clasifica el resultado según el puntaje sobre 13:
-   - **11 a 13** → APROBADA
-   - **7 a 10** → PREAPROBADA (con visita de seguimiento)
-   - **0 a 6** → RECHAZADA
-6. Da una recomendación de tamaño de mascota según el espacio disponible.
-7. Permite repetir la simulación y muestra un resumen final de la sesión.
+## Qué se agregó en esta entrega
 
-## La lista de rescatados (arrays)
-
-El refugio mantiene una lista viva de los animales que esperan hogar:
+La Pre-Entrega 4 guardaba a los rescatados como una lista de textos:
 
 ```js
 const rescatados = ["Rocco", "Luna", "Sin nombre", "Nube", "Tobías"];
 ```
 
-Está declarada con `const` porque **la variable nunca se reasigna**: lo que
-cambia es el contenido del array, no la variable en sí.
+El problema es que un texto no puede guardar el sexo, la edad ni el
+espacio que necesita el perro, y tampoco puede *hacer* nada. Ahora cada
+rescatado es un **objeto creado con una clase**, y la lista pasa a ser un
+array de objetos.
 
-### Movimientos del refugio
+## Qué hace el simulador
 
-Antes de abrir las solicitudes, el script simula el movimiento de un día real:
+1. Verifica las clases por consola.
+2. Simula los **movimientos del refugio del día** sobre el array de objetos.
+3. Abre el ciclo de solicitudes (`do...while`):
+   - Valida el nombre (máximo 3 intentos).
+   - Valida la edad (máximo 3 intentos) y rechaza a menores de 18.
+   - Pide el tipo de vivienda con un menú de 4 opciones → de 1 a 3 puntos.
+   - Crea la instancia de `Solicitud` con los datos ya validados.
+   - Recorre el cuestionario de 5 preguntas → `sumarPuntos(2)` por cada "sí".
+   - `evaluar()` clasifica el puntaje sobre 13:
+     - **11 a 13** → APROBADA
+     - **7 a 10** → PREAPROBADA (con visita de seguimiento)
+     - **0 a 6** → RECHAZADA
+   - Si `fueAceptada()`, muestra **solo los rescatados compatibles** con esa
+     vivienda y permite adoptar a uno: se ejecuta `adoptar()` y el animal sale
+     de la lista de disponibles.
+4. Muestra un resumen final con evaluadas, aprobadas, adopciones concretadas
+   y quiénes siguen esperando hogar.
 
-| Método | Qué representa en el refugio | Resultado |
+
+## Las clases
+
+### `Rescatado`
+
+Modela a cada animal del refugio. El `constructor` recibe **5 parámetros**
+y los guarda en el objeto con `this`.
+
+| Propiedad | Origen | Ejemplo |
 |---|---|---|
-| `unshift("Nina")` | Caso urgente: entra con prioridad al principio | Nina queda en la posición 0 |
-| `pop()` | El último de la lista fue adoptado | Sale Tobías y se guarda en una variable |
-| `push("Milo")` | Llega un rescatado nuevo, al final | Milo queda último |
-| `splice(3, 1, "Pelusa")` | El que estaba como "Sin nombre" ya tiene nombre | Se reemplaza en su posición |
-| `includes()` + `indexOf()` | Buscar si un animal está disponible y en qué lugar | Retorna el índice, o `-1` |
+| `nombre` | parámetro | `"Rocco"` |
+| `sexo` | parámetro | `"macho"` |
+| `edad` | parámetro | `3` |
+| `tamanio` | parámetro | `"grande"` |
+| `puntosViviendaMinimos` | parámetro | `3` |
+| `adoptado` | valor fijo inicial | `false` |
+| `adoptadoPor` | valor fijo inicial | `""` |
 
-Estado inicial (5) → después de los movimientos (6):
+`adoptado` y `adoptadoPor` no se piden por parámetro: todo rescatado nace
+disponible y sin familia. Cambian recién cuando se ejecuta `adoptar()`.
+
+| Método | Qué hace | Retorna |
+|---|---|---|
+| `describir()` | **Informa**: arma la ficha del animal para consola o `alert` | Un texto |
+| `esCompatibleCon(puntosVivienda)` | **Calcula**: compara el espacio de la vivienda con el que necesita | `true` / `false` |
+| `bautizar(nuevoNombre)` | **Modifica**: le cambia el nombre al que entró sin identificar | El nombre anterior |
+| `adoptar(nombreAdoptante)` | **Modifica**: marca `adoptado = true` y guarda quién se lo llevó | `false` si ya estaba adoptado |
+
+### `Solicitud`
+
+Modela la postulación de cada persona. Antes el puntaje y el estado eran
+variables sueltas dentro del bucle; ahora viven dentro del objeto.
+
+| Propiedad | Ejemplo |
+|---|---|
+| `nombreAdoptante` | `"Sharon Rodríguez"` |
+| `edad` | `30` |
+| `tipoVivienda` | `"Casa con patio"` |
+| `puntosVivienda` | `3` |
+| `puntaje` | arranca con los puntos de la vivienda |
+| `estado` | `"EN EVALUACIÓN"` hasta que se evalúa |
+
+| Método | Qué hace | Retorna |
+|---|---|---|
+| `sumarPuntos(puntos)` | **Modifica** el puntaje acumulado | El puntaje actualizado |
+| `evaluar()` | **Modifica** el estado. Reutiliza la función expresada `clasificarSolicitud` | `"APROBADA"`, `"PREAPROBADA"` o `"RECHAZADA"` |
+| `fueAceptada()` | **Informa** si quedó aprobada o preaprobada | `true` / `false` |
+| `resumen()` | **Informa**: una línea con todos los datos | Un texto |
+
+## Instanciación con `new`
+
+Cada objeto real se crea con `new` y se guarda en una **constante**:
+
+```js
+const rocco  = new Rescatado("Rocco", "macho", 3, "grande", 3);
+const luna   = new Rescatado("Luna", "hembra", 2, "chico", 1);
+const nube   = new Rescatado("Nube", "hembra", 5, "chico", 1);
+const tobias = new Rescatado("Tobías", "macho", 7, "mediano", 2);
+// ...
+
+const rescatados = [rocco, luna, rescatadoSinNombre, nube, tobias];
+```
+
+`new` hace cuatro cosas automáticamente: crea un objeto vacío, apunta `this`
+a ese objeto, ejecuta el constructor y devuelve el objeto ya armado.
+
+Las instancias son **independientes**: adoptar a Rocco no cambia en nada a Luna.
+
+Además, dentro del bucle principal se crea una instancia de `Solicitud` por
+cada persona que usa el simulador.
+
+## Verificación por consola
+
+Apenas se abre la página, antes del simulador, el script comprueba que las
+clases funcionan:
 
 ```
-["Nina", "Rocco", "Luna", "Pelusa", "Nube", "Milo"]
+--- Verificación de la clase Rescatado ---
+Rescatado { nombre: 'Rocco', sexo: 'macho', edad: 3, ... }
+describir() → 🐶 Rocco · macho · porte grande · 3 años · disponible
+¿Rocco entra en un depto sin balcón (1 punto)? false
+¿Rocco entra en una casa con patio (3 puntos)? true
+¿Se puede volver a adoptar a Carbón? false
+
+--- Verificación de la clase Solicitud ---
+Puntaje inicial (solo vivienda): 3
+Puntaje tras el cuestionario: 13
+evaluar() → APROBADA
+resumen() → Prueba Automática · Casa con patio · 13/13 · APROBADA
 ```
 
-### Búsqueda por parte del usuario
+## Los métodos de array (se mantienen de la Pre-Entrega 4)
 
-Cuando una solicitud queda aprobada o preaprobada, se muestra la lista y se
-puede consultar por un rescatado concreto. La función `buscarRescatado` usa
-`includes()` para saber si está, y `indexOf()` para decir en qué posición:
+Ahora operan sobre objetos en lugar de textos:
+
+| Método | Función | Qué representa en el refugio |
+|---|---|---|
+| `push()` | `registrarIngreso` | Llega un rescatado nuevo, al final |
+| `unshift()` | `registrarUrgencia` | Caso urgente: entra con prioridad al principio |
+| `pop()` | `registrarAdopcionDelDia` | El último de la lista fue adoptado |
+| `includes()` + `indexOf()` | `buscarRescatado` | Buscar si un animal está disponible y en qué lugar |
+| `splice()` | `retirarDeLaLista` | Sacar de la lista al que acaban de adoptar |
+
+Como la lista guarda **objetos**, `includes()` e `indexOf()` no pueden comparar
+contra un texto directamente. Por eso `buscarRescatado` arma primero un array
+auxiliar con los nombres en minúsculas y busca sobre ese:
 
 ```js
 function buscarRescatado(lista, nombre) {
   let indice = -1;
+  const nombresEnMinusculas = [];
 
-  if (lista.includes(nombre)) {
-    indice = lista.indexOf(nombre);
+  for (const rescatado of lista) {
+    nombresEnMinusculas.push(rescatado.nombre.toLowerCase());
+  }
+
+  const buscado = nombre.trim().toLowerCase();
+
+  if (nombresEnMinusculas.includes(buscado)) {
+    indice = nombresEnMinusculas.indexOf(buscado);
   }
 
   return indice;
 }
 ```
-
-### Recorrido con `for...of`
-
-`mostrarRescatados` recorre la lista con `for...of`, que en cada vuelta entrega
-directamente el **valor** del elemento, sin necesidad de un índice:
-
-```js
-for (const rescatado of lista) {
-  console.log("   • Rescatado: " + rescatado);
-}
-```
-
-En el cuestionario, en cambio, se usa un `for` clásico con `.length`, porque
-ahí **sí** hace falta el índice para numerar las preguntas.
 
 ## Funciones del simulador
 
@@ -121,28 +210,34 @@ El script sigue el algoritmo básico de todo programa:
 
 | Función | Tipo | Parámetros | Retorna |
 |---|---|---|---|
-| `obtenerVivienda` | Declarada | `opcion` | Un **objeto** `{ nombre, puntos }` |
-| `clasificarSolicitud` | **Expresada** | `puntaje` | `"APROBADA"`, `"PREAPROBADA"` o `"RECHAZADA"` |
+| `obtenerVivienda` | Declarada | `opcion` | Un objeto literal `{ nombre, puntos }` |
+| `clasificarSolicitud` | **Expresada** | `puntaje` | El estado de la solicitud |
 | `obtenerRecomendacion` | Declarada | `puntosVivienda` | Texto con la recomendación |
+| `filtrarCompatibles` | Declarada | `lista`, `puntosVivienda` | Array con los rescatados que entran en esa vivienda |
 | `esAfirmativa` | **Flecha** | `texto` | `true` o `false` |
 | `esNegativa` | **Flecha** | `texto` | `true` o `false` |
 | `puntosQueFaltan` | **Flecha** | `puntaje`, `minimo` | Cuántos puntos faltaron |
 
+`obtenerVivienda` devuelve un **objeto literal** y no una instancia de clase
+porque es un dato simple, de un solo uso y sin comportamiento propio: no
+necesita métodos ni crear muchas copias iguales.
+
 ### 3. Gestión de la lista de rescatados
 
-| Función | Tipo | Parámetros | Retorna |
-|---|---|---|---|
-| `registrarIngreso` | Declarada | `lista`, `nombre` | Cantidad de rescatados (`push`) |
-| `registrarUrgencia` | Declarada | `lista`, `nombre` | Cantidad de rescatados (`unshift`) |
-| `registrarAdopcion` | Declarada | `lista` | El rescatado que salió (`pop`) |
-| `buscarRescatado` | Declarada | `lista`, `nombre` | El índice, o `-1` (`includes` + `indexOf`) |
-| `corregirNombre` | Declarada | `lista`, `indice`, `nuevoNombre` | El nombre anterior (`splice`) |
+| Función | Parámetros | Retorna |
+|---|---|---|
+| `registrarIngreso` | `lista`, `rescatado` | Cantidad de rescatados (`push`) |
+| `registrarUrgencia` | `lista`, `rescatado` | Cantidad de rescatados (`unshift`) |
+| `registrarAdopcionDelDia` | `lista`, `familia` | El objeto que salió (`pop` + `adoptar()`) |
+| `buscarRescatado` | `lista`, `nombre` | El índice, o `-1` (`includes` + `indexOf`) |
+| `retirarDeLaLista` | `lista`, `indice` | El objeto retirado (`splice`) |
 
 ### 4. Salida de resultados
 
-| Función | Tipo | Parámetros | Retorna |
-|---|---|---|---|
-| `mostrarRescatados` | Declarada | `lista` | Nada: recorre con `for...of` y muestra |
-| `mostrarEncabezado` | Declarada | `numero` | Nada: solo muestra |
-| `mostrarResultado` | Declarada | `nombre`, `puntaje`, `maximo`, `estado` | Nada: solo muestra |
-| `mostrarResumen` | Declarada | `evaluadas`, `aprobadas` | Nada: solo muestra |
+| Función | Parámetros | Retorna |
+|---|---|---|
+| `armarTextoRescatados` | `lista` | Texto con un rescatado por línea (`for...of` + `describir()`) |
+| `mostrarRescatados` | `lista` | Nada: solo muestra |
+| `mostrarEncabezado` | `numero` | Nada: solo muestra |
+| `mostrarResultado` | `solicitud` | Nada: recibe el objeto completo |
+| `mostrarResumen` | `evaluadas`, `aprobadas`, `adopciones`, `lista` | Nada: solo muestra |
