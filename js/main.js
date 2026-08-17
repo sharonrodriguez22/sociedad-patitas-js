@@ -1,14 +1,16 @@
 /* ============================================================
    SOCIEDAD PATITAS - Simulador de solicitud de adopción
-   Pre-Entrega 4: Uso e interacción con Arrays
+   Pre-Entrega 5: Objetos
 
-   Tipos de función usados:
-   - Declaradas:  function nombre(...) { ... }
-   - Expresada:   const nombre = function(...) { ... }
-   - Flecha:      const nombre = (...) => ...
+   Qué se suma respecto de la Pre-Entrega 4:
+   - class Rescatado  → modela a cada animal del refugio
+   - class Solicitud  → modela la postulación de cada persona
+   - La lista de rescatados deja de ser un array de textos
+   y pasa a ser un array de OBJETOS creados con new.
 
-   Métodos de array usados:
-   push, unshift, pop, includes, indexOf y splice
+   Se mantiene todo lo anterior: funciones declaradas, expresadas
+   y flecha, ciclos (while, do...while, for, for...of) y los
+   métodos de array push, unshift, pop, includes, indexOf y splice.
    ============================================================ */
 
 // ============================================================
@@ -36,16 +38,6 @@ const PREGUNTAS = [
   "¿Te comprometes a castrar al animal y recibir una visita de seguimiento?"
 ];
 
-// LISTA DE RESCATADOS DISPONIBLES PARA ADOPTAR.
-// Va cambiando durante el día: entran rescatados nuevos y salen los adoptados.
-// Está declarada con const porque la variable nunca se reasigna:
-// lo que cambia es el contenido del array, no la variable en sí.
-// "Sin nombre" es un rescatado que todavía no fue bautizado.
-const rescatados = ["Rocco", "Luna", "Sin nombre", "Nube", "Tobías"];
-
-// Datos de los movimientos del día
-const CASO_URGENTE = "Nina";
-const INGRESO_NUEVO = "Milo";
 const NOMBRE_PROVISORIO = "Sin nombre";
 const NOMBRE_DEFINITIVO = "Pelusa";
 
@@ -61,9 +53,156 @@ const MENU_VIVIENDA =
 let seguirSimulando = true;
 let solicitudesEvaluadas = 0;
 let solicitudesAprobadas = 0;
+let adopcionesConcretadas = 0;
 
 /* ============================================================
-   FUNCIONES FLECHA
+   2) CLASE RESCATADO
+   Es el "molde" de cada animal del refugio. Antes cada rescatado
+   era solo un texto ("Rocco") y no podía guardar más información
+   ni hacer nada por sí mismo. Ahora es un objeto con sus propios
+   datos (propiedades) y sus propias acciones (métodos).
+
+   El constructor recibe 5 parámetros y con this los guarda dentro
+   del objeto que se está creando en ese momento.
+   ============================================================ */
+class Rescatado {
+  constructor(nombre, sexo, edad, tamanio, puntosViviendaMinimos) {
+    this.nombre = nombre;                                 // "Rocco"
+    this.sexo = sexo;                                     // "macho" o "hembra"
+    this.edad = edad;                                     // en años
+    this.tamanio = tamanio;                               // "chico", "mediano" o "grande"
+    this.puntosViviendaMinimos = puntosViviendaMinimos;   // espacio que necesita (1 a 3)
+
+    // Estas dos NO son parámetros: todo rescatado nace disponible
+    // y sin familia. Cambian recién cuando se ejecuta adoptar().
+    this.adoptado = false;
+    this.adoptadoPor = "";
+  }
+
+  // MÉTODO 1 - INFORMA sobre el estado del objeto.
+  // Retorna un texto listo para mostrar por consola o en un alert.
+  describir() {
+    let situacion = "disponible";
+
+    if (this.adoptado) {
+      situacion = "adoptado por " + this.adoptadoPor;
+    }
+
+    // Para que no quede escrito "1 años"
+    let textoEdad = this.edad + " años";
+
+    if (this.edad === 1) {
+      textoEdad = "1 año";
+    }
+
+    return "🐶 " + this.nombre + " · " + this.sexo + " · porte " + this.tamanio +
+           " · " + textoEdad + " · " + situacion;
+  }
+
+  // MÉTODO 2 - CALCULA. Compara los puntos de vivienda de quien
+  // solicita con el espacio mínimo que necesita este animal.
+  // Retorna true o false.
+  esCompatibleCon(puntosVivienda) {
+    return puntosVivienda >= this.puntosViviendaMinimos;
+  }
+
+  // MÉTODO 3 - MODIFICA el estado del objeto: le cambia el nombre
+  // al rescatado que entró al refugio sin identificar.
+  // Retorna el nombre que tenía antes.
+  bautizar(nuevoNombre) {
+    const anterior = this.nombre;
+    this.nombre = nuevoNombre;
+    return anterior;
+  }
+
+  // MÉTODO 4 - MODIFICA el estado del objeto. Marca al rescatado
+  // como adoptado y guarda quién se lo llevó.
+  // Retorna false si ya estaba adoptado, para no adoptarlo dos veces.
+  adoptar(nombreAdoptante) {
+    if (this.adoptado) {
+      return false;
+    }
+
+    this.adoptado = true;
+    this.adoptadoPor = nombreAdoptante;
+    return true;
+  }
+}
+
+/* ============================================================
+   3) CLASE SOLICITUD
+   Modela la postulación de cada persona que quiere adoptar.
+   Antes el puntaje y el estado eran variables sueltas dentro del
+   bucle; ahora viven dentro del objeto que representa la solicitud.
+   ============================================================ */
+class Solicitud {
+  constructor(nombreAdoptante, edad, tipoVivienda, puntosVivienda) {
+    this.nombreAdoptante = nombreAdoptante;
+    this.edad = edad;
+    this.tipoVivienda = tipoVivienda;
+    this.puntosVivienda = puntosVivienda;
+
+    // El puntaje arranca con los puntos que dio la vivienda
+    this.puntaje = puntosVivienda;
+    this.estado = "EN EVALUACIÓN";
+  }
+
+  // MODIFICA el puntaje acumulado. Retorna el puntaje actualizado.
+  sumarPuntos(puntos) {
+    this.puntaje = this.puntaje + puntos;
+    return this.puntaje;
+  }
+
+  // MODIFICA el estado. Reutiliza la función expresada
+  // clasificarSolicitud, que ya existía desde la Pre-Entrega 3.
+  evaluar() {
+    this.estado = clasificarSolicitud(this.puntaje);
+    return this.estado;
+  }
+
+  // INFORMA: true si la solicitud quedó aprobada o preaprobada.
+  fueAceptada() {
+    return this.estado === "APROBADA" || this.estado === "PREAPROBADA";
+  }
+
+  // INFORMA: una línea con el resumen de la solicitud.
+  resumen() {
+    return this.nombreAdoptante + " · " + this.tipoVivienda + " · " +
+           this.puntaje + "/" + PUNTAJE_MAXIMO + " · " + this.estado;
+  }
+}
+
+/* ============================================================
+   4) INSTANCIAS
+   Cada objeto real se crea con el operador new y se guarda en
+   una constante. new hace cuatro cosas: crea el objeto vacío,
+   apunta this a ese objeto, ejecuta el constructor y lo devuelve.
+   ============================================================ */
+
+// Rescatados que abren el día en el refugio
+const rocco = new Rescatado("Rocco", "macho", 3, "grande", 3);
+const luna = new Rescatado("Luna", "hembra", 2, "chico", 1);
+const rescatadoSinNombre = new Rescatado(NOMBRE_PROVISORIO, "hembra", 1, "mediano", 2);
+const nube = new Rescatado("Nube", "hembra", 5, "chico", 1);
+const tobias = new Rescatado("Tobías", "macho", 7, "mediano", 2);
+
+// Movimientos del día: un caso urgente y un ingreso nuevo
+const nina = new Rescatado("Nina", "hembra", 1, "chico", 1);
+const milo = new Rescatado("Milo", "macho", 4, "mediano", 2);
+
+// Carbón ya encontró hogar la semana pasada. No entra a la lista
+// de disponibles: queda para verificar que un rescatado adoptado
+// no pueda volver a adoptarse.
+const carbon = new Rescatado("Carbón", "macho", 6, "grande", 3);
+carbon.adoptar("la familia Gómez");
+
+// LISTA DE RESCATADOS DISPONIBLES: ahora es un array de OBJETOS.
+// Está declarada con const porque la variable nunca se reasigna:
+// lo que cambia es el contenido del array, no la variable en sí.
+const rescatados = [rocco, luna, rescatadoSinNombre, nube, tobias];
+
+/* ============================================================
+   5) FUNCIONES FLECHA
    ============================================================ */
 
 // Parámetro: texto. Retorna true o false.
@@ -76,7 +215,7 @@ const esNegativa = (texto) => texto === "no" || texto === "No" || texto === "NO"
 const puntosQueFaltan = (puntaje, minimo) => minimo - puntaje;
 
 /* ============================================================
-   1) FUNCIONES DE ENTRADA DE DATOS
+   6) FUNCIONES DE ENTRADA DE DATOS
    Piden información con prompt, la validan y RETORNAN el dato
    ya limpio. Si la persona falla todos los intentos, retornan
    un valor vacío para que el programa principal se dé cuenta.
@@ -136,7 +275,7 @@ function pedirRespuestaSiNo(pregunta, numero, total) {
   while (respuesta === "" && intentos < MAX_INTENTOS) {
     const ingreso = prompt("Pregunta " + numero + " de " + total + "\n\n" + pregunta + "\n\n(escribe si o no)");
 
-    // Invoco las funciones flecha para no repetir las comparaciones
+    // Se invocan las funciones flecha para no repetir las comparaciones
     if (esAfirmativa(ingreso)) {
       respuesta = "si";
     } else if (esNegativa(ingreso)) {
@@ -151,14 +290,14 @@ function pedirRespuestaSiNo(pregunta, numero, total) {
 }
 
 /* ============================================================
-   2) FUNCIONES DE PROCESAMIENTO
+   7) FUNCIONES DE PROCESAMIENTO
    Reciben datos por parámetro, los evalúan y RETORNAN un resultado.
    ============================================================ */
 
-// Declarada. Parámetro: opcion. Retorna un OBJETO con las dos
-// características de la vivienda: su nombre y los puntos que suma.
-// Un objeto agrupa varios datos relacionados en una sola variable,
-// y a cada dato se accede con un punto: vivienda.nombre, vivienda.puntos
+// Declarada. Parámetro: opcion. Retorna un objeto literal con las
+// dos características de la vivienda: su nombre y los puntos que suma.
+// Es un objeto simple y de un solo uso, por eso acá no hace falta
+// una clase: no necesita métodos ni crear muchas copias iguales.
 function obtenerVivienda(opcion) {
   let vivienda = { nombre: "Sin definir", puntos: 0 };
 
@@ -183,6 +322,7 @@ function obtenerVivienda(opcion) {
 }
 
 // EXPRESADA. Parámetro: puntaje. Retorna el estado de la solicitud.
+// La invoca el método evaluar() de la clase Solicitud.
 const clasificarSolicitud = function (puntaje) {
   let estado = "";
 
@@ -203,114 +343,121 @@ function obtenerRecomendacion(puntosVivienda) {
   let texto = "";
 
   if (puntosVivienda === 3) {
-    texto = "🐶 Puedes adoptar un perro de cualquier tamaño.";
+    texto = "🐶 Puedes adoptar un perro de cualquier porte.";
   } else if (puntosVivienda === 2) {
-    texto = "🐕 Te conviene un perro chico o mediano, o un gato.";
+    texto = "🐕 Te conviene un perro de porte chico o mediano.";
   } else {
-    texto = "🐱 Un gato o un perro de raza pequeña es tu mejor opción.";
+    texto = "🐕‍🦺 Un perro de porte chico es tu mejor opción.";
   }
 
   return texto;
 }
 
+// Declarada. Parámetros: lista y puntos de vivienda.
+// Recorre el array con for...of y arma una lista nueva solo con los
+// rescatados que entran en esa vivienda, usando el método del objeto.
+// Retorna un array (puede quedar vacío).
+function filtrarCompatibles(lista, puntosVivienda) {
+  const compatibles = [];
+
+  for (const rescatado of lista) {
+    if (rescatado.esCompatibleCon(puntosVivienda)) {
+      compatibles.push(rescatado);
+    }
+  }
+
+  return compatibles;
+}
+
 /* ============================================================
-   3) FUNCIONES DE GESTIÓN DE LA LISTA DE RESCATADOS
-   Trabajan sobre el array que reciben por parámetro.
+   8) FUNCIONES DE GESTIÓN DE LA LISTA DE RESCATADOS
+   Trabajan sobre el array de objetos que reciben por parámetro.
    ============================================================ */
 
-// Declarada. Parámetros: lista y nombre.
+// Declarada. Parámetros: lista y un objeto Rescatado.
 // push() agrega el nuevo rescatado AL FINAL de la lista.
 // Retorna cuántos rescatados quedaron.
-function registrarIngreso(lista, nombre) {
-  lista.push(nombre);
-  console.log("🐾 Ingresó " + nombre + " al refugio. Ahora hay " + lista.length + " rescatados.");
+function registrarIngreso(lista, rescatado) {
+  lista.push(rescatado);
+  console.log("🐾 Ingresó " + rescatado.nombre + " al refugio. Ahora hay " + lista.length + " rescatados.");
   return lista.length;
 }
 
-// Declarada. Parámetros: lista y nombre.
+// Declarada. Parámetros: lista y un objeto Rescatado.
 // unshift() lo agrega AL PRINCIPIO, porque los casos urgentes
 // tienen prioridad para conseguir hogar.
 // Retorna cuántos rescatados quedaron.
-function registrarUrgencia(lista, nombre) {
-  lista.unshift(nombre);
-  console.log("🚑 " + nombre + " entró como caso urgente y quedó primero en la lista.");
+function registrarUrgencia(lista, rescatado) {
+  lista.unshift(rescatado);
+  console.log("🚑 " + rescatado.nombre + " entró como caso urgente y quedó primero en la lista.");
   return lista.length;
 }
 
-// Declarada. Parámetro: lista.
-// pop() saca el ÚLTIMO elemento y lo devuelve.
-// Retorna el nombre del rescatado que salió.
-function registrarAdopcion(lista) {
+// Declarada. Parámetros: lista y nombre de la familia.
+// pop() saca el ÚLTIMO objeto de la lista y lo devuelve.
+// Invoca el método adoptar() para dejar registrado el cambio de estado.
+// Retorna el objeto Rescatado que salió.
+function registrarAdopcionDelDia(lista, familia) {
   const adoptado = lista.pop();
-  console.log("Se ha eliminado el elemento: " + adoptado);
-  console.log("   (se fue con su nueva familia 🏡)");
+
+  adoptado.adoptar(familia);
+  console.log("🏡 Se ha eliminado el elemento: " + adoptado.nombre + " (se fue con " + familia + ").");
+  console.log("   Estado del objeto → " + adoptado.describir());
+
   return adoptado;
 }
 
-// Declarada. Parámetros: lista y nombre.
-// includes() responde true o false. indexOf() dice la posición.
+// Declarada. Parámetros: lista y nombre buscado.
+// Como la lista ahora guarda OBJETOS, includes() e indexOf() no pueden
+// comparar contra un texto directamente: primero armo un array auxiliar
+// con los nombres en minúsculas y busco sobre ese.
+// trim() saca los espacios de más y toLowerCase() evita que "nina"
+// no coincida con "Nina".
 // Retorna el índice, o -1 si el rescatado no está en la lista.
 function buscarRescatado(lista, nombre) {
   let indice = -1;
-
-  if (lista.includes(nombre)) {
-    indice = lista.indexOf(nombre);
-  }
-
-  return indice;
-}
-
-// Declarada. Parámetros: lista y nombre.
-// includes() e indexOf() comparan de forma EXACTA, así que "nina"
-// no coincidiría con "Nina". Para que no importen las mayúsculas,
-// armo una copia de la lista en minúsculas y busco sobre esa copia.
-// Retorna el índice, o -1 si el rescatado no está en la lista.
-function buscarRescatado(lista, nombre) {
-  let indice = -1;
-  const listaEnMinusculas = [];
+  const nombresEnMinusculas = [];
 
   for (const rescatado of lista) {
-    listaEnMinusculas.push(rescatado.toLowerCase());
+    nombresEnMinusculas.push(rescatado.nombre.toLowerCase());
   }
 
-  // trim() saca los espacios de más que puedan quedar al escribir
   const buscado = nombre.trim().toLowerCase();
 
-  if (listaEnMinusculas.includes(buscado)) {
-    indice = listaEnMinusculas.indexOf(buscado);
+  if (nombresEnMinusculas.includes(buscado)) {
+    indice = nombresEnMinusculas.indexOf(buscado);
   }
 
   return indice;
 }
 
-// Declarada. Parámetros: lista, indice y nuevoNombre.
-// splice(indice, 1, nuevoNombre) borra 1 elemento en esa posición
-// y pone el nuevo en su lugar.
-// Retorna el nombre que tenía antes.
-function corregirNombre(lista, indice, nuevoNombre) {
-  const anterior = lista[indice];
-
-  lista.splice(indice, 1, nuevoNombre);
-  console.log("✏️ Posición " + indice + ": \"" + anterior + "\" pasó a llamarse \"" + nuevoNombre + "\".");
-
-  return anterior;
+// Declarada. Parámetros: lista e indice.
+// splice(indice, 1) saca 1 elemento de esa posición exacta y devuelve
+// un array con lo que sacó. Se usa cuando alguien adopta a un rescatado
+// puntual, que puede estar en cualquier lugar de la lista.
+// Retorna el objeto Rescatado retirado.
+function retirarDeLaLista(lista, indice) {
+  const retirados = lista.splice(indice, 1);
+  console.log("📤 " + retirados[0].nombre + " salió de la lista de disponibles. Quedan " + lista.length + ".");
+  return retirados[0];
 }
 
 /* ============================================================
-   4) FUNCIONES DE SALIDA
+   9) FUNCIONES DE SALIDA
    Muestran resultados por consola y por alert.
    ============================================================ */
 
-// Declarada. Parámetro: lista.
+// Declarada. Parámetro: lista de objetos.
 // Recorre el array con for...of, que en cada vuelta entrega
-// directamente el VALOR del elemento (no su índice).
-// Retorna un texto con un rescatado por línea, para poder mostrarlo
-// tanto en la consola como dentro de un prompt o un alert y así el usuario pueda verlo.
+// directamente el VALOR del elemento (no su índice), e invoca el
+// método describir() de cada objeto.
+// Retorna un texto con un rescatado por línea, para mostrarlo tanto
+// en la consola como dentro de un prompt o un alert.
 function armarTextoRescatados(lista) {
   let texto = "";
 
   for (const rescatado of lista) {
-    texto = texto + "• Rescatado: " + rescatado + "\n";
+    texto = texto + "• " + rescatado.describir() + "\n";
   }
 
   return texto;
@@ -324,23 +471,24 @@ function mostrarRescatados(lista) {
   console.log(armarTextoRescatados(lista));
 }
 
-// Declarada. Parámetros: nombre, puntaje, maximo y estado.
-function mostrarResultado(nombre, puntaje, maximo, estado) {
+// Declarada. Parámetro: un objeto Solicitud.
+// Ahora recibe el objeto completo en lugar de cuatro datos sueltos.
+function mostrarResultado(solicitud) {
   console.log("");
-  console.log("📊 Puntaje final de " + nombre + ": " + puntaje + " de " + maximo);
+  console.log("📊 Puntaje final de " + solicitud.nombreAdoptante + ": " + solicitud.puntaje + " de " + PUNTAJE_MAXIMO);
 
-  if (estado === "APROBADA") {
+  if (solicitud.estado === "APROBADA") {
     console.log("✅ Solicitud APROBADA. Puedes coordinar el encuentro con tu futuro compañero.");
-    alert("✅ ¡Felicitaciones, " + nombre + "!\n\nPuntaje: " + puntaje + "/" + maximo + "\nTu solicitud fue APROBADA. 🐾");
-  } else if (estado === "PREAPROBADA") {
+    alert("✅ ¡Felicitaciones, " + solicitud.nombreAdoptante + "!\n\nPuntaje: " + solicitud.puntaje + "/" + PUNTAJE_MAXIMO + "\nTu solicitud fue APROBADA. 🐾");
+  } else if (solicitud.estado === "PREAPROBADA") {
     console.log("🟡 Solicitud PREAPROBADA. Coordinamos una visita al domicilio antes de confirmar.");
-    alert("🟡 " + nombre + ", tu solicitud quedó PREAPROBADA.\n\nPuntaje: " + puntaje + "/" + maximo + "\nCoordinamos una visita antes de confirmar.");
+    alert("🟡 " + solicitud.nombreAdoptante + ", tu solicitud quedó PREAPROBADA.\n\nPuntaje: " + solicitud.puntaje + "/" + PUNTAJE_MAXIMO + "\nCoordinamos una visita antes de confirmar.");
   } else {
     // Invoco la función flecha para saber cuánto le faltó
-    const faltaron = puntosQueFaltan(puntaje, PUNTAJE_SEGUIMIENTO);
+    const faltaron = puntosQueFaltan(solicitud.puntaje, PUNTAJE_SEGUIMIENTO);
 
     console.log("⛔ Solicitud RECHAZADA por ahora. Te faltaron " + faltaron + " puntos.");
-    alert("⛔ " + nombre + ", por ahora no podemos aprobar la adopción.\n\nPuntaje: " + puntaje + "/" + maximo + "\nTe faltaron " + faltaron + " puntos.\n¿Te sumas como hogar de tránsito? 🐾");
+    alert("⛔ " + solicitud.nombreAdoptante + ", por ahora no podemos aprobar la adopción.\n\nPuntaje: " + solicitud.puntaje + "/" + PUNTAJE_MAXIMO + "\nTe faltaron " + faltaron + " puntos.\n¿Te sumas como hogar de tránsito? 🐾");
   }
 }
 
@@ -352,15 +500,17 @@ function mostrarEncabezado(numero) {
   console.log("===============================");
 }
 
-// Declarada. Parámetros: evaluadas, aprobadas y lista.
-function mostrarResumen(evaluadas, aprobadas, lista) {
+// Declarada. Parámetros: evaluadas, aprobadas, adopciones y lista.
+function mostrarResumen(evaluadas, aprobadas, adopciones, lista) {
   console.log("");
   console.log("===============================");
   console.log("RESUMEN DE LA SESIÓN");
   console.log("===============================");
   console.log("Solicitudes evaluadas: " + evaluadas);
   console.log("Aprobadas o preaprobadas: " + aprobadas);
+  console.log("Adopciones concretadas: " + adopciones);
   console.log("Rescatados que siguen esperando hogar: " + lista.length);
+  mostrarRescatados(lista);
 
   if (aprobadas > 0) {
     console.log("🎉 ¡Gracias por adoptar en " + REFUGIO + "!");
@@ -368,69 +518,116 @@ function mostrarResumen(evaluadas, aprobadas, lista) {
     console.log("🐾 Gracias por tu interés en " + REFUGIO + ". Te esperamos.");
   }
 
-  alert("Simulador finalizado.\n\nEvaluadas: " + evaluadas + "\nAprobadas o preaprobadas: " + aprobadas + "\nRescatados esperando hogar: " + lista.length + "\n\n¡Gracias por pasar por " + REFUGIO + "! 🐾");
+  alert(
+    "Simulador finalizado.\n\n" +
+    "Evaluadas: " + evaluadas + "\n" +
+    "Aprobadas o preaprobadas: " + aprobadas + "\n" +
+    "Adopciones concretadas: " + adopciones + "\n" +
+    "Rescatados esperando hogar: " + lista.length + "\n\n" +
+    "¡Gracias por pasar por " + REFUGIO + "! 🐾"
+  );
 }
 
 /* ============================================================
    PROGRAMA PRINCIPAL
-   Aquí se invocan las funciones definidas arriba.
+   Aquí se invocan las funciones y los métodos definidos arriba.
    ============================================================ */
 
 console.log("🐾 Simulador de adopción de " + REFUGIO);
+
+/* ------------------------------------------------------------
+   VERIFICACIÓN DE LAS CLASES POR CONSOLA
+   Antes de abrir el simulador, compruebo que las instancias se
+   crearon bien y que los métodos hacen lo que tienen que hacer.
+   ------------------------------------------------------------ */
+console.log("");
+console.log("--- Verificación de la clase Rescatado ---");
+
+// El objeto completo, con todas sus propiedades
+console.log(rocco);
+
+// Método que informa
+console.log("describir() → " + rocco.describir());
+console.log("describir() → " + luna.describir());
+
+// Método que calcula: Rocco es de porte grande y necesita 3 puntos de
+// vivienda, Luna es de porte chico y se conforma con 1
+console.log("¿Rocco entra en un depto sin balcón (1 punto)? " + rocco.esCompatibleCon(1)); // false
+console.log("¿Rocco entra en una casa con patio (3 puntos)? " + rocco.esCompatibleCon(3)); // true
+console.log("¿Luna entra en un depto sin balcón (1 punto)? " + luna.esCompatibleCon(1));   // true
+
+// Método que modifica: Carbón ya fue adoptado, así que adoptar()
+// tiene que devolver false y no pisar los datos de su familia
+console.log("Carbón ya tiene hogar → " + carbon.describir());
+console.log("¿Se puede volver a adoptar a Carbón? " + carbon.adoptar("otra persona")); // false
+
+// Las instancias son independientes entre sí: cambiar una no afecta al resto
+console.log("Rocco sigue disponible: " + (rocco.adoptado === false));
+
+console.log("");
+console.log("--- Verificación de la clase Solicitud ---");
+
+// Instancia de prueba: casa con patio (3 puntos) y 5 respuestas afirmativas
+const solicitudDePrueba = new Solicitud("Prueba Automática", 30, "Casa con patio", 3);
+console.log("Puntaje inicial (solo vivienda): " + solicitudDePrueba.puntaje);
+solicitudDePrueba.sumarPuntos(PUNTOS_POR_SI * PREGUNTAS.length);
+console.log("Puntaje tras el cuestionario: " + solicitudDePrueba.puntaje);
+console.log("evaluar() → " + solicitudDePrueba.evaluar());
+console.log("fueAceptada() → " + solicitudDePrueba.fueAceptada());
+console.log("resumen() → " + solicitudDePrueba.resumen());
+
+/* ------------------------------------------------------------
+   MOVIMIENTOS DEL REFUGIO DE HOY
+   Antes de abrir las solicitudes se actualiza la lista de rescatados.
+   ------------------------------------------------------------ */
 alert("🐾 " + REFUGIO + "\n\nVamos a simular tu solicitud de adopción.\nAbre la consola con F12 para ver el detalle.");
 
-// ------------------------------------------------------------
-// MOVIMIENTOS DEL REFUGIO DE HOY
-// Antes de abrir las solicitudes, se actualiza la lista de rescatados
-// ------------------------------------------------------------
 console.log("");
 console.log("--- Movimientos del refugio de hoy ---");
 console.log("Lista al abrir: " + rescatados.length + " rescatados");
 
 // Guardo lo que retorna cada función para armar después el resumen
-registrarUrgencia(rescatados, CASO_URGENTE);    // unshift: entra al principio
-const adoptado = registrarAdopcion(rescatados); // pop: sale el último
-registrarIngreso(rescatados, INGRESO_NUEVO);    // push: entra al final
+registrarUrgencia(rescatados, nina);                                    // unshift: entra al principio
+const adoptadoHoy = registrarAdopcionDelDia(rescatados, "la familia Pérez"); // pop: sale el último
+registrarIngreso(rescatados, milo);                                     // push: entra al final
 
-// CADENA DE FUNCIONES: buscarRescatado retorna el índice y ese
-// índice entra como argumento en corregirNombre
+// CADENA DE FUNCIONES: buscarRescatado retorna el índice y con ese
+// índice llego al objeto para invocar su método bautizar()
 const indiceSinNombre = buscarRescatado(rescatados, NOMBRE_PROVISORIO);
 let textoBautizo = "";
 
 if (indiceSinNombre !== -1) {
-  // corregirNombre usa splice y retorna el nombre que tenía antes
-  const anterior = corregirNombre(rescatados, indiceSinNombre, NOMBRE_DEFINITIVO);
+  // bautizar() cambia la propiedad nombre y retorna el nombre anterior
+  const anterior = rescatados[indiceSinNombre].bautizar(NOMBRE_DEFINITIVO);
   textoBautizo = "✏️ \"" + anterior + "\" ya tiene nombre: " + NOMBRE_DEFINITIVO + ".\n";
+  console.log("✏️ Posición " + indiceSinNombre + ": \"" + anterior + "\" pasó a llamarse \"" + NOMBRE_DEFINITIVO + "\".");
 }
 
-mostrarRescatados(rescatados); // for...of por consola
+mostrarRescatados(rescatados); // for...of + describir() por consola
 
 // El mismo resumen se muestra por alert, para quien no tenga la consola abierta
 alert(
   "📋 Movimientos del refugio de hoy\n\n" +
-  "🚑 " + CASO_URGENTE + " ingresó como caso urgente y quedó primero.\n" +
-  "🏡 Se ha eliminado el elemento: " + adoptado + " (fue adoptado).\n" +
-  "🐾 " + INGRESO_NUEVO + " ingresó al refugio.\n" +
+  "🚑 " + nina.nombre + " ingresó como caso urgente y quedó primero.\n" +
+  "🏡 Se ha eliminado el elemento: " + adoptadoHoy.nombre + " (fue adoptado).\n" +
+  "🐾 " + milo.nombre + " ingresó al refugio.\n" +
   textoBautizo +
   "\n🏠 Rescatados esperando hogar (" + rescatados.length + "):\n\n" +
   armarTextoRescatados(rescatados)
 );
 
-// ============================================================
-// BUCLE PRINCIPAL (do...while)
-// ============================================================
+/* ------------------------------------------------------------
+   BUCLE PRINCIPAL (do...while)
+   ------------------------------------------------------------ */
 do {
   // Variables LOCALES de cada vuelta del bucle
-  let tipoVivienda = "";
+  let tipoVivienda = "Sin definir";
   let puntosVivienda = 0;
-  let puntaje = 0;
   let solicitudValida = true;
 
   mostrarEncabezado(solicitudesEvaluadas + 1);
 
   // ----- ENTRADA: nombre -----
-  // El return de pedirTexto se guarda aquí y después viaja como
-  // argumento a pedirNumeroEntero y a mostrarResultado
   const nombre = pedirTexto("Ingresa tu nombre y apellido:", LARGO_MINIMO_NOMBRE);
 
   if (nombre === "") {
@@ -480,7 +677,6 @@ do {
         alert("Opción inválida. Elige un número del 1 al 4.");
       } else {
         tipoVivienda = vivienda.nombre;
-        puntaje = puntaje + puntosVivienda;
         console.log("🏠 Vivienda: " + tipoVivienda + " (+" + puntosVivienda + " puntos)");
       }
     }
@@ -490,17 +686,26 @@ do {
     }
   }
 
+  // ----- INSTANCIACIÓN: se crea el objeto de esta solicitud -----
+  // Con los datos ya validados creo la instancia con new. A partir
+  // de acá el puntaje y el estado viven dentro del objeto.
+  const solicitud = new Solicitud(nombre, edad, tipoVivienda, puntosVivienda);
+
   // ----- ENTRADA: cuestionario recorriendo el arreglo con for -----
   if (solicitudValida) {
     console.log("");
     console.log("--- Cuestionario de responsabilidad (" + PREGUNTAS.length + " preguntas) ---");
 
+    // for clásico y no for...of: acá necesito el índice para numerar
+    // las preguntas, y la segunda condición me deja cortar el recorrido
+    // si la persona cancela a mitad del cuestionario.
     for (let i = 0; i < PREGUNTAS.length && solicitudValida; i++) {
       // Invoco la función de entrada pasándole la pregunta de la posición i
       const respuesta = pedirRespuestaSiNo(PREGUNTAS[i], i + 1, PREGUNTAS.length);
 
       if (respuesta === "si") {
-        puntaje = puntaje + PUNTOS_POR_SI;
+        // El método del objeto acumula el puntaje
+        solicitud.sumarPuntos(PUNTOS_POR_SI);
         console.log("   " + (i + 1) + ". " + PREGUNTAS[i] + " → SÍ (+" + PUNTOS_POR_SI + " puntos)");
       } else if (respuesta === "no") {
         console.log("   " + (i + 1) + ". " + PREGUNTAS[i] + " → NO (+0 puntos)");
@@ -512,42 +717,60 @@ do {
 
   // ----- PROCESAMIENTO + SALIDA: resultado -----
   if (solicitudValida) {
-    // CADENA DE FUNCIONES:
-    // el puntaje que se armó con obtenerVivienda y pedirRespuestaSiNo
-    // entra en clasificarSolicitud, y lo que ésta retorna entra como
-    // argumento en mostrarResultado
-    const estado = clasificarSolicitud(puntaje);
+    // El método evaluar() guarda el estado dentro del objeto y lo retorna
+    solicitud.evaluar();
+    mostrarResultado(solicitud);
 
-    mostrarResultado(nombre, puntaje, PUNTAJE_MAXIMO, estado);
+    console.log("💡 Recomendación: " + obtenerRecomendacion(solicitud.puntosVivienda));
+    console.log("📄 " + solicitud.resumen());
 
-    // Otra cadena: los puntos que retornó obtenerVivienda alimentan
-    // a obtenerRecomendacion
-    console.log("💡 Recomendación: " + obtenerRecomendacion(puntosVivienda));
-
-    if (estado !== "RECHAZADA") {
+    if (solicitud.fueAceptada()) {
       solicitudesAprobadas++;
 
-      // ----- BÚSQUEDA EN LA LISTA DE RESCATADOS -----
-      mostrarRescatados(rescatados);
+      // ----- ADOPCIÓN: buscar y llevarse a un rescatado -----
+      // filtrarCompatibles usa el método esCompatibleCon de cada objeto
+      const compatibles = filtrarCompatibles(rescatados, solicitud.puntosVivienda);
 
-      // El texto de la lista va DENTRO del prompt, para que la persona
-      // vea los nombres disponibles en el mismo cuadro donde va a escribir
-      const buscado = prompt(
-        "🏠 Rescatados disponibles en " + REFUGIO + " (" + rescatados.length + "):\n\n" +
-        armarTextoRescatados(rescatados) +
-        "\n¿Quieres consultar por alguno?\nEscribe su nombre tal como aparece (o Cancelar para omitir):"
-      );
+      console.log("");
+      console.log("🔎 Rescatados compatibles con " + solicitud.tipoVivienda + " (" + compatibles.length + "):");
+      console.log(armarTextoRescatados(compatibles));
 
-      if (buscado !== null && buscado !== "") {
-        // buscarRescatado usa includes() e indexOf() por dentro
-        const posicion = buscarRescatado(rescatados, buscado);
+      if (compatibles.length === 0) {
+        alert("Por ahora no tenemos rescatados que se adapten a " + solicitud.tipoVivienda + ".\n¡Pero seguimos recibiendo animales todas las semanas! 🐾");
+      } else {
+        // El texto de la lista va DENTRO del prompt, para que la persona
+        // vea los nombres disponibles en el mismo cuadro donde va a escribir
+        const elegido = prompt(
+          "🏠 Rescatados que se adaptan a tu vivienda (" + compatibles.length + "):\n\n" +
+          armarTextoRescatados(compatibles) +
+          "\n¿A cuál quieres adoptar?\nEscribe su nombre tal como aparece (o Cancelar para pensarlo):"
+        );
 
-        if (posicion === -1) {
-          console.log("❌ " + buscado + " no está en la lista de disponibles.");
-          alert("❌ " + buscado + " no figura entre nuestros rescatados disponibles.");
-        } else {
-          console.log("✅ " + buscado + " está disponible, en la posición " + posicion + " de la lista.");
-          alert("✅ ¡" + buscado + " está disponible!\n\nEstá en la posición " + posicion + " de la lista de espera.");
+        if (elegido !== null && elegido !== "") {
+          // buscarRescatado usa includes() e indexOf() por dentro
+          const posicion = buscarRescatado(rescatados, elegido);
+
+          if (posicion === -1) {
+            console.log("❌ " + elegido + " no está en la lista de disponibles.");
+            alert("❌ " + elegido + " no figura entre nuestros rescatados disponibles.");
+          } else {
+            const rescatadoElegido = rescatados[posicion];
+
+            if (rescatadoElegido.esCompatibleCon(solicitud.puntosVivienda)) {
+              // adoptar() cambia el estado del objeto y retorna true
+              rescatadoElegido.adoptar(solicitud.nombreAdoptante);
+
+              // splice() lo retira de la lista de disponibles
+              retirarDeLaLista(rescatados, posicion);
+              adopcionesConcretadas++;
+
+              console.log("🎉 " + rescatadoElegido.describir());
+              alert("🎉 ¡Felicitaciones, " + solicitud.nombreAdoptante + "!\n\n" + rescatadoElegido.nombre + " se va contigo.\n\n" + rescatadoElegido.describir());
+            } else {
+              console.log("⚠️ " + rescatadoElegido.nombre + " necesita más espacio del que ofrece " + solicitud.tipoVivienda + ".");
+              alert("⚠️ " + rescatadoElegido.nombre + " es de porte " + rescatadoElegido.tamanio + " y necesita más espacio.\n\n" + obtenerRecomendacion(solicitud.puntosVivienda));
+            }
+          }
         }
       }
     }
@@ -571,4 +794,4 @@ do {
 } while (seguirSimulando && solicitudesEvaluadas < MAX_SOLICITUDES);
 
 // ----- SALIDA final, una vez terminado el bucle -----
-mostrarResumen(solicitudesEvaluadas, solicitudesAprobadas, rescatados);
+mostrarResumen(solicitudesEvaluadas, solicitudesAprobadas, adopcionesConcretadas, rescatados);
