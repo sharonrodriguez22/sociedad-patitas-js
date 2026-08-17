@@ -61,9 +61,10 @@ array de objetos.
      - **11 a 13** → APROBADA
      - **7 a 10** → PREAPROBADA (con visita de seguimiento)
      - **0 a 6** → RECHAZADA
-   - Si `fueAceptada()`, muestra **solo los rescatados compatibles** con esa
-     vivienda y permite adoptar a uno: se ejecuta `adoptar()` y el animal sale
-     de la lista de disponibles.
+   - Si `fueAceptada()`, muestra **solo los rescatados compatibles y libres** de esa vivienda. Según el estado:
+     - **APROBADA** → `adoptar()` y el perro sale de la lista con `splice`.
+     - **PREAPROBADA** → `reservar()`: el perro queda apartado, sigue en el
+       refugio y no aparece como disponible para otra persona.
 4. Muestra un resumen final con evaluadas, aprobadas, adopciones concretadas
    y quiénes siguen esperando hogar.
 
@@ -82,18 +83,23 @@ y los guarda en el objeto con `this`.
 | `edad` | parámetro | `3` |
 | `tamanio` | parámetro | `"grande"` |
 | `puntosViviendaMinimos` | parámetro | `3` |
+| `reservado` | valor fijo inicial | `false` |
+| `reservadoPor` | valor fijo inicial | `""` |
 | `adoptado` | valor fijo inicial | `false` |
 | `adoptadoPor` | valor fijo inicial | `""` |
 
-`adoptado` y `adoptadoPor` no se piden por parámetro: todo rescatado nace
-disponible y sin familia. Cambian recién cuando se ejecuta `adoptar()`.
+Las cuatro últimas no se piden por parámetro: todo rescatado nace disponible y
+sin familia. Cambian recién cuando se ejecuta `reservar()` o `adoptar()`.
 
 | Método | Qué hace | Retorna |
 |---|---|---|
 | `describir()` | **Informa**: arma la ficha del animal para consola o `alert` | Un texto |
 | `esCompatibleCon(puntosVivienda)` | **Calcula**: compara el espacio de la vivienda con el que necesita | `true` / `false` |
+| `estaDisponible()` | **Informa**: `true` solo si nadie lo adoptó ni lo reservó | `true` / `false` |
+| `reservar(nombreAdoptante)` | **Modifica**: lo aparta para una solicitud PREAPROBADA, sin sacarlo del refugio | `false` si ya estaba pedido |
 | `bautizar(nuevoNombre)` | **Modifica**: le cambia el nombre al que entró sin identificar | El nombre anterior |
-| `adoptar(nombreAdoptante)` | **Modifica**: marca `adoptado = true` y guarda quién se lo llevó | `false` si ya estaba adoptado |
+| `adoptar(nombreAdoptante)` | **Modifica**: marca `adoptado = true` y guarda quién se lo llevó | `false` si ya estaba adoptado o reservado por otro |
+
 
 ### `Solicitud`
 
