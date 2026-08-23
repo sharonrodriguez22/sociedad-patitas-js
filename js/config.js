@@ -1,5 +1,5 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 7
+   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 8
    config.js · Constantes de configuración
 
    Los valores fijos del refugio, todos juntos en un solo lugar.
@@ -28,3 +28,12 @@ const PREGUNTAS = [
 
 // Espacio mínimo que necesita cada porte, en puntos de vivienda
 const PUNTOS_POR_PORTE = { chico: 1, mediano: 2, grande: 3 };
+
+/* ------------------------------------------------------------
+   CLAVES DEL WEB STORAGE
+   Van con el prefijo "patitas." para no chocar con lo que puedan
+   guardar otras páginas del mismo dominio.
+   ------------------------------------------------------------ */
+const CLAVE_RESCATADOS = "patitas.rescatados"; // localStorage
+const CLAVE_SALIDAS = "patitas.salidas";       // localStorage
+const CLAVE_SOLICITUD = "patitas.solicitud";   // sessionStorage

@@ -14,6 +14,7 @@
   <script src="js/config.js" defer></script>
   <script src="js/clases/Rescatado.js" defer></script>
   <script src="js/clases/Solicitud.js" defer></script>
+  <script src="js/almacenamiento.js" defer></script>
   <script src="js/utilidades.js" defer></script>
   <script src="js/datos.js" defer></script>
   <script src="js/vista.js" defer></script>
@@ -37,7 +38,8 @@
     <section class="panel panel-ancho" id="panel-refugio">
       <h2><span class="numero">1</span> Rescatados del refugio</h2>
       <p class="ayuda">Estos son los perros que esperan hogar. Para adoptar o reservar
-        alguno, primero completa la solicitud del paso 2.</p>
+        alguno, primero completa la solicitud del paso 2. Todo lo que hagas queda
+        guardado en tu navegador: si recargas la página, sigue estando.</p>
 
       <div class="barra-superior">
         <div class="campo campo-busqueda">
@@ -49,6 +51,14 @@
 
       <!-- Aquí el JS inyecta las tarjetas de cada rescatado -->
       <div id="contenedor-rescatados" class="grilla"></div>
+
+      <div class="pie-panel">
+        <button type="button" id="btn-reiniciar" class="boton boton-secundario"
+                data-confirmando="no"
+                title="Borra los datos guardados en el navegador y vuelve al estado inicial">
+          Reiniciar el refugio
+        </button>
+      </div>
     </section>
 
     <!-- ============================================================
@@ -168,7 +178,7 @@
 
   </main>
 
-  <footer class="pie">Pre-Entrega 7 · Curso de JavaScript · Coderhouse</footer>
+  <footer class="pie">Pre-Entrega 8 · Curso de JavaScript · Coderhouse</footer>
 
 </body>
 </html>

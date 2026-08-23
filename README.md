@@ -1,4 +1,4 @@
-# 🐾 Sociedad Patitas — Pre-Entrega 7
+# 🐾 Sociedad Patitas — Pre-Entrega 8
 
 Simulador de solicitud de adopción de **Sociedad Patitas**.
 Curso de JavaScript · Carrera de Desarrollo de Aplicaciones · Coderhouse.
@@ -15,11 +15,12 @@ sociedad-patitas-js/
 ├── css/
 │   └── styles.css        # estilos del simulador
 ├── js/
-│   ├── config.js         # constantes del refugio
+│   ├── config.js           # constantes y claves del storage
 │   ├── clases/
-│   │   ├── Rescatado.js  # la clase Rescatado
-│   │   └── Solicitud.js  # la clase Solicitud
-│   ├── utilidades.js     # funciones auxiliares puras
+│   │   ├── rescatado.js    # la clase Rescatado
+│   │   └── solicitud.js    # la clase Solicitud
+│   ├── almacenamiento.js   # la memoria del navegador
+│   ├── utilidades.js       # funciones auxiliares puras
 │   ├── datos.js          # el array de objetos y sus consultas
 │   ├── vista.js          # todo lo que toca el DOM
 │   └── main.js           # eventos y arranque
@@ -28,7 +29,8 @@ sociedad-patitas-js/
 
 | Archivo | De qué se ocupa | Qué NO hace |
 |---|---|---|
-| `config.js` | Los valores fijos: puntajes, preguntas, equivalencia porte → espacio | No tiene lógica |
+| `config.js` | Los valores fijos: puntajes, preguntas, porte → espacio, claves del storage | No tiene lógica |
+| `almacenamiento.js` | Hablar con `localStorage` y `sessionStorage` | No sabe qué guarda |
 | `clases/Rescatado.js` | Modela a cada perro: sus datos y sus métodos | No sabe que existe una pantalla |
 | `clases/Solicitud.js` | Modela la postulación y se autoevalúa | No sabe que existe una pantalla |
 | `utilidades.js` | Funciones cortas y puras (`enPesos`, `clasificarSolicitud`…) | No toca el array ni el DOM |
@@ -44,11 +46,22 @@ Vinculación en el `<head>` del HTML:
 <script src="js/config.js" defer></script>
 <script src="js/clases/Rescatado.js" defer></script>
 <script src="js/clases/Solicitud.js" defer></script>
+<script src="js/almacenamiento.js" defer></script>
 <script src="js/utilidades.js" defer></script>
 <script src="js/datos.js" defer></script>
 <script src="js/vista.js" defer></script>
 <script src="js/main.js" defer></script>
 ```
+
+`defer` hace dos cosas: los scripts se descargan en paralelo sin frenar el
+dibujado de la página, y se ejecutan recién cuando el HTML terminó de
+leerse, **respetando el orden en que están escritos**. Sin `defer`,
+`document.getElementById` no encontraría nada porque el navegador todavía
+no habría creado los elementos.
+
+**El orden importa.** `datos.js` ejecuta `new Rescatado(...)` en el momento
+de cargarse, así que las clases tienen que estar definidas antes. Lo mismo
+con `config.js`, del que dependen todos los demás.
 
 ### Por qué scripts clásicos y no módulos ES
 
@@ -61,16 +74,118 @@ responsabilidades se consigue igual.
 
 ## Qué cambia en esta entrega
 
-Se terminaron los `prompt`, los `alert` y los `console.log`. Toda la
-interacción pasa a la pantalla:
+El simulador ahora **tiene memoria**. Antes, cada F5 devolvía el refugio al
+estado inicial y se perdía todo lo hecho. Ahora los datos viven en el
+navegador.
 
-| Antes (Pre-Entrega 6) | Ahora (Pre-Entrega 7) |
+| Antes (Pre-Entrega 7) | Ahora (Pre-Entrega 8) |
 |---|---|
-| Menú por `prompt` con números | Tres paneles con formularios y botones |
-| Lista impresa con `console.log` | Tarjetas renderizadas en una grilla |
-| Resultado por `alert` | Panel de resultado con barra de puntaje |
-| Búsqueda escribiendo en un `prompt` | Buscador que filtra mientras se escribe |
-| Errores avisados por `alert` | Mensaje en pantalla + campo marcado en rojo |
+| Al recargar se perdía todo | El refugio se recupera tal como quedó |
+| Los arrays nacían en el código | Los arrays nacen del `localStorage` |
+| La solicitud se borraba con F5 | Sobrevive al F5 en `sessionStorage` |
+| No había forma de empezar de cero | Botón "Reiniciar el refugio" |
+
+## La persistencia
+
+### Qué se guarda y dónde
+
+| Dato | Almacén | Por qué |
+|---|---|---|
+| `rescatados` | `localStorage` | Son los perros del refugio: tienen que seguir ahí mañana |
+| `salidas` | `localStorage` | El registro histórico no se pierde nunca |
+| La solicitud en curso | `sessionStorage` | Es un trámite de esta visita: sobrevive al F5, se borra al cerrar la pestaña |
+
+Las claves llevan el prefijo `patitas.` para no chocar con lo que puedan
+guardar otras páginas del mismo dominio. Por el mismo motivo el reinicio
+borra clave por clave con `removeItem()` y no con `localStorage.clear()`,
+que borraría también lo ajeno.
+
+### El problema de los objetos: la rehidratación
+
+Este fue el punto más delicado de la entrega. El Web Storage solo guarda
+texto, así que todo pasa por `JSON.stringify` al salir y por `JSON.parse`
+al volver. Pero `JSON.parse` devuelve **objetos comunes, sin métodos**: un
+perro recuperado sabría su nombre, pero no sabría responder
+`esCompatibleCon()` ni `adoptar()`, y el simulador se rompería al primer
+clic.
+
+La solución es no usar lo que vuelve del storage tal cual, sino tratarlo
+como una receta para construir de nuevo la instancia con `new`. A eso se le
+llama **rehidratar**:
+
+```js
+function rehidratarRescatado(datos) {
+  const { id, nombre, sexo, edad, tamanio, costoMensual,
+          reservado, reservadoPor, adoptado, adoptadoPor } = datos;
+
+  const rescatado = new Rescatado(id, nombre, sexo, edad, tamanio, costoMensual);
+
+  // El constructor siempre crea al perro disponible: hay que
+  // devolverle el estado que tenía guardado.
+  rescatado.reservado = reservado;
+  rescatado.reservadoPor = reservadoPor;
+  rescatado.adoptado = adoptado;
+  rescatado.adoptadoPor = adoptadoPor;
+
+  return rescatado;
+}
+```
+
+### El ciclo completo
+
+Cada acción del usuario sigue siempre los mismos tres pasos:
+
+1. **Se actualiza el array** en memoria (`push`, `splice`, o un cambio de estado).
+2. **Se guarda** con `persistirEstado()`, que hace el `JSON.stringify`.
+3. **Se vuelve a renderizar** con `actualizarVista()`.
+
+```js
+rescatados.push(nuevo);
+persistirEstado();
+actualizarVista();
+```
+
+## Operadores modernos
+
+| Operador | Dónde se usa | Qué resuelve |
+|---|---|---|
+| `?.` | `guardados?.map(...)`, `solicitudActual?.nombreAdoptante`, `elegida?.index` | Leer sin romperse cuando el valor puede no existir |
+| `??` | `... ?? crearRescatadosIniciales()`, `... ?? []`, `... ?? 0` | Un valor por defecto cuando no hay nada guardado |
+| `? :` | El botón de cada tarjeta, el ícono del registro, el mensaje de bienvenida | Reemplaza `if/else` cortos |
+| `&&` | `solicitudActual && renderizarResultado(solicitudActual)` | Ejecutar solo si hay algo que dibujar |
+| `...` | `push(...crearRescatadosIniciales())`, `[...salidas].reverse()` | Desparramar un array y copiarlo antes de invertirlo |
+
+Si no hay nada guardado, `leerLocal` devuelve `null`, el `?.` corta la
+cadena sin lanzar error y el `??` entrega la lista inicial.
+
+> **Por qué `??` y no `||`.** El material muestra el patrón
+> `JSON.parse(localStorage.getItem("carrito")) || []`. Funciona, pero `||`
+> también reemplaza valores válidos como `0`, `""` o `false`. `??` solo
+> actúa cuando el valor es `null` o `undefined`, que es exactamente el caso
+> de "no hay nada guardado".
+
+## Destructuring
+
+| Dónde | Qué se saca |
+|---|---|
+| `rehidratarRescatado(datos)` | Las diez propiedades del perro guardado |
+| `rehidratarSolicitud(datos)` | Los seis datos de la solicitud |
+| `cargarSalidas()` | `({ rescatado, motivo, destino })` en el parámetro del `map` |
+| `plantillaTarjeta(rescatado)` | Los datos sueltos de la tarjeta |
+| `renderizarResultado(solicitud)` | Nombre, vivienda, puntaje y estado |
+| `repoblarFormularioSolicitud({ nombreAdoptante, edad, tipoVivienda })` | Desestructurado directo en el parámetro |
+
+Un detalle: en `plantillaTarjeta` se desestructuran solo los **datos**, no
+los métodos. Un método sacado del objeto pierde su `this` y deja de
+funcionar, así que `rescatado.esCachorro()` se sigue llamando sobre el
+objeto.
+
+## Si el navegador no deja guardar
+
+En modo privado, con el storage lleno o con la configuración bloqueada,
+`localStorage` lanza una excepción. Todas las llamadas están envueltas en
+`try/catch`: si no se puede guardar, el simulador sigue funcionando sin
+memoria entre sesiones y el mensaje de bienvenida lo avisa.
 
 ## Cómo se usa
 
@@ -79,6 +194,8 @@ interacción pasa a la pantalla:
 3. **Paso 2** — completar la solicitud y evaluarla.
 4. Según el resultado, adoptar o reservar un perro desde su tarjeta.
 5. **Paso 3** — registrar el ingreso de un perro nuevo.
+6. Recargar con `F5`: todo sigue igual.
+7. **Reiniciar el refugio** borra los datos guardados y vuelve al estado inicial.
 
 ## El registro de salidas
 
@@ -300,9 +417,12 @@ Cada acción del usuario tiene una respuesta en pantalla:
 - **Mensajes.** `mostrarMensaje(texto, tipo)` crea un `<p>` con
   `createElement`, le pone el texto con `textContent`, lo cuelga con
   `appendChild` y lo saca solo con `remove()` a los 4,5 segundos. El tipo
-  (`exito`, `info`, `error`) define el color.
+  (`exito`, `info`, `error`) define el color. La franja es `position: sticky`
+  para que el aviso se lea aunque la acción se haya disparado desde un
+  formulario del final de la página.
 - **Campos con error.** El input mal completado recibe la clase
-  `campo-error` (borde rojo) y el foco.
+  `campo-error` (borde rojo), el foco, y un `<span>` debajo con el motivo
+  concreto. `limpiarErrores()` borra las marcas y los textos en cada envío.
 - **Tarjeta resaltada.** El perro recién agregado o recién reservado aparece
   con la clase `tarjeta-nueva`, que dispara una animación de destaque.
 - **Estados de la tarjeta.** Un perro reservado cambia de color, muestra la

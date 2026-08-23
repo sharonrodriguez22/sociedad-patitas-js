@@ -1,21 +1,18 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 7
+   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 8
    main.js · Eventos y arranque
 
    El punto de entrada. Conecta lo que hace el usuario con la lógica
    del refugio y le pide a vista.js que vuelva a dibujar.
-
-   Es el último script que carga: para cuando se ejecuta, las clases,
-   los datos y las funciones de dibujo ya están disponibles.
    ============================================================ */
 
 /* ------------------------------------------------------------
    1) MANEJADORES DE EVENTOS
    ------------------------------------------------------------ */
 
-// EVENTO submit del formulario de solicitud.
+// Envío del formulario de solicitud de adopción.
 function manejarSolicitud(evento) {
-  evento.preventDefault(); // sin esto la página se recargaría
+  evento.preventDefault(); // el formulario no recarga la página
   limpiarErrores();
 
   const nombre = inputNombre.value.trim();
@@ -51,7 +48,7 @@ function manejarSolicitud(evento) {
   const tipoVivienda = selectVivienda.options[selectVivienda.selectedIndex].textContent;
   const solicitud = new Solicitud(nombre, edad, tipoVivienda, puntosVivienda);
 
-  // querySelectorAll + forEach: sumo 2 puntos por cada respuesta marcada
+  // Cada respuesta afirmativa del cuestionario suma 2 puntos
   const respuestas = document.querySelectorAll(".check-pregunta");
 
   respuestas.forEach(function (casilla) {
@@ -62,6 +59,9 @@ function manejarSolicitud(evento) {
 
   solicitud.evaluar();
   solicitudActual = solicitud;
+
+  // La solicitud vive en la pestaña: sobrevive a un F5, no al cierre
+  guardarSesion(CLAVE_SOLICITUD, solicitud);
 
   renderizarResultado(solicitud);
   actualizarVista(); // los botones de las tarjetas cambian según el estado
@@ -75,12 +75,14 @@ function manejarSolicitud(evento) {
   }
 }
 
-// EVENTO click en "Limpiar": borra el formulario y el resultado.
+// Botón "Limpiar": borra el formulario y el resultado.
 function manejarLimpiarSolicitud() {
   formSolicitud.reset();
   limpiarErrores();
 
   solicitudActual = null;
+  borrarSesion(CLAVE_SOLICITUD);
+
   cajaResultado.className = "resultado";
   cajaResultado.innerHTML = "";
 
@@ -88,7 +90,7 @@ function manejarLimpiarSolicitud() {
   mostrarMensaje("Formulario limpio. Puedes cargar una solicitud nueva.", "info");
 }
 
-// EVENTO submit del formulario de alta de un rescatado.
+// Envío del formulario de ingreso de un rescatado.
 function manejarAltaRescatado(evento) {
   evento.preventDefault();
   limpiarErrores();
@@ -105,7 +107,7 @@ function manejarAltaRescatado(evento) {
     return;
   }
 
-  // find: no puede haber dos perros con el mismo nombre en el refugio
+  // No puede haber dos perros con el mismo nombre en el refugio
   if (buscarPorNombre(rescatados, nombre) !== undefined) {
     marcarError(inputNombrePerro, "Ya hay un rescatado con ese nombre en el refugio.");
     mostrarMensaje("Ya hay un rescatado que se llama " + nombre + ". Elige otro nombre.", "error");
@@ -136,9 +138,10 @@ function manejarAltaRescatado(evento) {
     return;
   }
 
-  // push: la instancia nueva se suma al array y la vista se redibuja
+  // El rescatado nuevo se suma al refugio y la vista se redibuja
   const nuevo = new Rescatado(generarId(rescatados), nombre, sexo, edad, porte, costo);
   rescatados.push(nuevo);
+  persistirEstado(); // el perro nuevo queda guardado en el navegador
 
   idResaltado = nuevo.id; // para que su tarjeta aparezca destacada
   textoBusqueda = "";
@@ -150,7 +153,7 @@ function manejarAltaRescatado(evento) {
   mostrarMensaje(nombre + " ingresó al refugio. Ya aparece en la lista. 🐾", "exito");
 }
 
-// EVENTO click en el contenedor de tarjetas.
+// Clics dentro del contenedor de tarjetas.
 // Se pone UN solo listener en el contenedor en lugar de uno por botón:
 // como las tarjetas se vuelven a dibujar en cada render, sus botones
 // son nuevos cada vez y perderían su listener.
@@ -187,6 +190,7 @@ function manejarClickEnTarjetas(evento) {
     // persona: si fuera de otra, el método devolvería false.
     rescatado.adoptar(solicitudActual.nombreAdoptante);
     registrarSalida(rescatado, MOTIVO_ADOPCION, rescatado.adoptadoPor);
+    persistirEstado();
 
     actualizarVista();
     mostrarMensaje("🎉 Visita aprobada: " + rescatado.nombre + " ya se va con " + rescatado.adoptadoPor + ". Quedó anotado en el registro de salidas.", "exito");
@@ -200,6 +204,7 @@ function manejarClickEnTarjetas(evento) {
 
     // registrarSalida lo saca del refugio y lo anota en el registro
     registrarSalida(rescatado, MOTIVO_ADOPCION, rescatado.adoptadoPor);
+    persistirEstado();
 
     actualizarVista();
     mostrarMensaje("🎉 " + rescatado.nombre + " se va con " + rescatado.adoptadoPor + ". Quedó anotado en el registro de salidas.", "exito");
@@ -210,6 +215,7 @@ function manejarClickEnTarjetas(evento) {
     idPendienteBaja = null;
 
     rescatado.reservar(solicitudActual.nombreAdoptante);
+    persistirEstado();
 
     idResaltado = rescatado.id;
     actualizarVista();
@@ -227,26 +233,60 @@ function manejarClickEnTarjetas(evento) {
       return;
     }
 
-    // Segundo clic: remove() borra la tarjeta de la pantalla en el acto
+    // Segundo clic: la tarjeta desaparece de la pantalla en el acto
     const tarjeta = boton.closest(".tarjeta");
     tarjeta.remove();
 
     idPendienteBaja = null;
     registrarSalida(rescatado, MOTIVO_TRANSITO, "un hogar de tránsito");
+    persistirEstado();
 
     actualizarVista();
     mostrarMensaje("🏠 " + rescatado.nombre + " pasó a un hogar de tránsito y salió del listado.", "info");
   }
 }
 
-// EVENTO de teclado: filtra la lista mientras se escribe.
+// Botón "Reiniciar": borra lo guardado en el navegador y deja
+// el refugio como el primer día. Pide confirmación en dos pasos, igual
+// que la salida a tránsito.
+function manejarReinicio() {
+  if (botonReiniciar.dataset.confirmando !== "si") {
+    botonReiniciar.dataset.confirmando = "si";
+    botonReiniciar.textContent = "¿Confirmar reinicio?";
+    botonReiniciar.classList.add("boton-confirmar");
+    mostrarMensaje("Esto borra los datos guardados en el navegador. Vuelve a pulsar para confirmar.", "info");
+    return;
+  }
+
+  reiniciarRefugio();
+
+  solicitudActual = null;
+  idPendienteBaja = null;
+  textoBusqueda = "";
+  inputBuscar.value = "";
+
+  formSolicitud.reset();
+  formRescatado.reset();
+  limpiarErrores();
+  cajaResultado.className = "resultado";
+  cajaResultado.innerHTML = "";
+
+  botonReiniciar.dataset.confirmando = "no";
+  botonReiniciar.textContent = "Reiniciar el refugio";
+  botonReiniciar.classList.remove("boton-confirmar");
+
+  actualizarVista();
+  mostrarMensaje("Refugio reiniciado: se borraron los datos guardados y volvieron los 7 perros iniciales.", "exito");
+}
+
+// Filtra la lista mientras se escribe en el buscador.
 function manejarBusqueda(evento) {
   idPendienteBaja = null; // al buscar se cancela cualquier confirmación pendiente
   textoBusqueda = evento.target.value;
   actualizarVista();
 }
 
-// EVENTO de teclado: Escape limpia el buscador.
+// La tecla Escape limpia el buscador.
 function manejarTeclaEnBuscador(evento) {
   if (evento.key === "Escape") {
     inputBuscar.value = "";
@@ -264,11 +304,38 @@ function manejarTeclaEnBuscador(evento) {
    ------------------------------------------------------------ */
 formSolicitud.addEventListener("submit", manejarSolicitud);
 botonLimpiar.addEventListener("click", manejarLimpiarSolicitud);
+botonReiniciar.addEventListener("click", manejarReinicio);
 formRescatado.addEventListener("submit", manejarAltaRescatado);
 contenedorRescatados.addEventListener("click", manejarClickEnTarjetas);
 inputBuscar.addEventListener("keyup", manejarBusqueda);
 inputBuscar.addEventListener("keydown", manejarTeclaEnBuscador);
 
+
+// Vuelve a poner en el formulario los datos de la solicitud guardada.
+function repoblarFormularioSolicitud({ nombreAdoptante, edad, tipoVivienda }) {
+  inputNombre.value = nombreAdoptante;
+  inputEdad.value = edad;
+
+  // Vuelve a seleccionar la vivienda que se había elegido
+  const opciones = Array.from(selectVivienda.options);
+  const elegida = opciones.find((opcion) => opcion.textContent === tipoVivienda);
+
+  // Contempla el caso de que esa opción ya no exista
+  selectVivienda.selectedIndex = elegida?.index ?? 0;
+}
+
+// El mensaje de bienvenida cambia según lo que se haya recuperado.
+function armarMensajeDeBienvenida() {
+  if (hayAlmacenamiento() === false) {
+    return "Tu navegador no permite guardar datos, así que el refugio va a arrancar de cero en cada visita.";
+  }
+
+  const cantidad = salidas.length;
+
+  return cantidad > 0
+    ? "Bienvenida de nuevo a " + REFUGIO + ". Se recuperaron los datos guardados: " + cantidad + " salida(s) registrada(s)."
+    : "Bienvenida a " + REFUGIO + ". Completa la solicitud para poder adoptar.";
+}
 
 /* ------------------------------------------------------------
    3) ARRANQUE
@@ -277,4 +344,10 @@ inputBuscar.addEventListener("keydown", manejarTeclaEnBuscador);
    ------------------------------------------------------------ */
 renderizarPreguntas();
 actualizarVista();
-mostrarMensaje("Bienvenida a " + REFUGIO + ". Completa la solicitud para poder adoptar.", "info");
+
+// Si venía una solicitud guardada en la sesión, se vuelve a dibujar su
+// resultado y se repueblan los campos del formulario.
+solicitudActual && renderizarResultado(solicitudActual);
+solicitudActual && repoblarFormularioSolicitud(solicitudActual);
+
+mostrarMensaje(armarMensajeDeBienvenida(), "info");

@@ -1,6 +1,6 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 7
-   clases/solicitud.js · La clase Solicitud
+   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 8
+   clases/solicitud.js · La clase solicitud
 
    Modela la postulación de cada persona que quiere adoptar: guarda
    sus datos, acumula el puntaje del cuestionario y se autoevalúa.
@@ -20,19 +20,19 @@ class Solicitud {
     this.estado = "EN EVALUACIÓN";
   }
 
-  // MODIFICA el puntaje acumulado. Retorna el puntaje actualizado.
+  // Suma puntos al total acumulado y retorna el puntaje actualizado.
   sumarPuntos(puntos) {
     this.puntaje = this.puntaje + puntos;
     return this.puntaje;
   }
 
-  // MODIFICA el estado. Reutiliza la función expresada clasificarSolicitud.
+  // Define el estado de la solicitud a partir del puntaje obtenido.
   evaluar() {
     this.estado = clasificarSolicitud(this.puntaje);
     return this.estado;
   }
 
-  // INFORMA: true si quedó aprobada o preaprobada.
+  // True si quedó aprobada o preaprobada.
   fueAceptada() {
     return this.estado === "APROBADA" || this.estado === "PREAPROBADA";
   }
