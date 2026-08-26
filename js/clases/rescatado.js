@@ -1,5 +1,5 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 8
+   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 9
    clases/rescatado.js · La clase rescatado
 
    Modela a cada perro del refugio: agrupa sus datos (propiedades)
@@ -21,12 +21,20 @@ class Rescatado {
     // El espacio que necesita se deduce del porte
     this.puntosViviendaMinimos = PUNTOS_POR_PORTE[tamanio];
 
-    // Estas cuatro no son parámetros: todo rescatado nace disponible
-    // y sin familia. Cambian cuando se ejecuta reservar() o adoptar().
+    // Estas no son parámetros: todo rescatado nace disponible, sin
+    // familia y sin padrino. Cambian cuando se ejecuta reservar(),
+    // adoptar() o apadrinar().
     this.reservado = false;
     this.reservadoPor = "";
     this.adoptado = false;
     this.adoptadoPor = "";
+    this.apadrinado = false;
+    this.apadrinadoPor = "";
+  }
+
+  // Cuánto aporta por mes quien apadrina a este perro.
+  cuotaPadrinazgo() {
+    return Math.round(this.costoMensual * PROPORCION_PADRINAZGO);
   }
 
   // Devuelve la edad escrita en singular o plural.
@@ -75,6 +83,19 @@ class Rescatado {
 
     this.reservado = true;
     this.reservadoPor = nombreAdoptante;
+    return true;
+  }
+
+  // Le asigna un padrino o madrina. El perro no se va del refugio:
+  // sigue esperando hogar, pero alguien cubre parte de su gasto.
+  // Retorna false si ya lo apadrinaron o si ya se fue adoptado.
+  apadrinar(nombrePadrino) {
+    if (this.apadrinado || this.adoptado) {
+      return false;
+    }
+
+    this.apadrinado = true;
+    this.apadrinadoPor = nombrePadrino;
     return true;
   }
 

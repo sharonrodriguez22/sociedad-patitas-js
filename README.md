@@ -1,4 +1,4 @@
-# 🐾 Sociedad Patitas — Pre-Entrega 8
+# 🐾 Sociedad Patitas — Pre-Entrega 9
 
 Simulador de solicitud de adopción de **Sociedad Patitas**.
 Curso de JavaScript · Carrera de Desarrollo de Aplicaciones · Coderhouse.
@@ -17,11 +17,12 @@ sociedad-patitas-js/
 ├── js/
 │   ├── config.js           # constantes y claves del storage
 │   ├── clases/
-│   │   ├── rescatado.js    # la clase Rescatado
-│   │   └── solicitud.js    # la clase Solicitud
+│   │   ├── Rescatado.js    # la clase Rescatado
+│   │   └── Solicitud.js    # la clase Solicitud
 │   ├── almacenamiento.js   # la memoria del navegador
 │   ├── utilidades.js       # funciones auxiliares puras
 │   ├── datos.js          # el array de objetos y sus consultas
+│   ├── avisos.js           # rescatado de la semana (asincronismo)
 │   ├── vista.js          # todo lo que toca el DOM
 │   └── main.js           # eventos y arranque
 └── README.md
@@ -74,16 +75,58 @@ responsabilidades se consigue igual.
 
 ## Qué cambia en esta entrega
 
-El simulador ahora **tiene memoria**. Antes, cada F5 devolvía el refugio al
-estado inicial y se perdía todo lo hecho. Ahora los datos viven en el
-navegador.
+Esta entrega suma el asincronismo del módulo 9 y una función nueva del
+refugio: el padrinazgo.
 
-| Antes (Pre-Entrega 7) | Ahora (Pre-Entrega 8) |
+### El rescatado de la semana
+
+El refugio elige cada semana un perro para difundir y buscarle padrino o
+madrina. Esa consulta no es inmediata: el panel arranca con la clase
+`cargando` y se completa unos segundos después, sin frenar el resto de la
+pantalla. Mientras el temporizador corre se puede buscar, cargar la
+solicitud o registrar un ingreso con total normalidad.
+
+Vive en `js/avisos.js` y son dos piezas:
+
+**`obtenerDestacadoDeLaSemana()`** devuelve una promesa. El `setTimeout`
+marca la demora; cuando se cumple, resuelve con el perro de mayor costo de mantenimiento
+mensual, que es el que más necesita un padrino. Si no queda ninguno
+disponible, la promesa se rechaza.
+
+**`cargarDestacadoDeLaSemana()`** consume esa promesa con `async/await`
+dentro de un `try/catch/finally`:
+
+| Bloque | Qué hace |
 |---|---|
-| Al recargar se perdía todo | El refugio se recupera tal como quedó |
-| Los arrays nacían en el código | Los arrays nacen del `localStorage` |
-| La solicitud se borraba con F5 | Sobrevive al F5 en `sessionStorage` |
-| No había forma de empezar de cero | Botón "Reiniciar el refugio" |
+| `try` | Espera la consulta y dibuja el panel con el destacado |
+| `catch` | Si no hubo destacado, deja el panel explicando el motivo |
+| `finally` | Saca el estado de carga, haya salido bien o mal |
+
+En el arranque se llama **sin `await`**: la carga queda en curso y el
+simulador sigue respondiendo mientras tanto.
+
+Para ver el `catch` en acción alcanza con vaciar el refugio: se adoptan o
+se mandan a tránsito todos los perros y se recarga la página. Como el
+estado queda guardado en `localStorage`, el refugio abre sin candidatos y
+la promesa se rechaza.
+
+### El padrinazgo
+
+Apadrinar es un punto intermedio entre mirar y adoptar: la persona cubre
+la mitad del gasto mensual del perro, que **sigue en el refugio**
+esperando hogar. No hace falta solicitud aprobada, alcanza con dejar el
+nombre en la barra del refugio.
+
+El segundo `try/catch/finally` está acá, en `apadrinarRescatado()` de
+`main.js`, sobre un fragmento con tres desenlaces posibles:
+
+- el nombre llega vacío o demasiado corto
+- el perro ya tiene padrino, y `apadrinar()` devuelve `false`
+- todo sale bien y el padrinazgo se registra
+
+Los dos primeros lanzan un error que el `catch` convierte en un aviso
+visible junto al campo. El `finally` vuelve a dibujar la pantalla en
+cualquiera de los tres casos.
 
 ## La persistencia
 
@@ -154,6 +197,15 @@ actualizarVista();
 | `? :` | El botón de cada tarjeta, el ícono del registro, el mensaje de bienvenida | Reemplaza `if/else` cortos |
 | `&&` | `solicitudActual && renderizarResultado(solicitudActual)` | Ejecutar solo si hay algo que dibujar |
 | `...` | `push(...crearRescatadosIniciales())`, `[...salidas].reverse()` | Desparramar un array y copiarlo antes de invertirlo |
+
+La línea que junta tres de ellos:
+
+```js
+function cargarRescatados() {
+  const guardados = leerLocal(CLAVE_RESCATADOS);
+  return guardados?.map(rehidratarRescatado) ?? crearRescatadosIniciales();
+}
+```
 
 Si no hay nada guardado, `leerLocal` devuelve `null`, el `?.` corta la
 cadena sin lanzar error y el `??` entrega la lista inicial.

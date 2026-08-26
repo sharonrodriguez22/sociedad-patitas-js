@@ -1,9 +1,11 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 8
+   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 9
    almacenamiento.js · La memoria del navegador
 
    Toda la conversación con el Web Storage pasa por este archivo.
-   Ninguna otra parte del proyecto llama a localStorage directamente.
+   Ninguna otra parte del proyecto llama a localStorage directamente,
+   así que si mañana hubiera que cambiar la forma de guardar, se toca
+   solo acá.
 
    Se usan los dos tipos de almacenamiento, cada uno donde tiene
    sentido:
@@ -14,7 +16,8 @@
 
    · sessionStorage → la solicitud que se está evaluando. Es un dato
                       de la visita actual: sobrevive a un F5, pero se
-                      borra al cerrar la pestaña.
+                      borra al cerrar la pestaña, que es exactamente
+                      lo que corresponde a un trámite en curso.
    ============================================================ */
 
 /* ------------------------------------------------------------
@@ -31,7 +34,7 @@ function guardarEn(almacen, clave, valor) {
   } catch (error) {
     // El navegador puede negarse: modo privado, storage lleno o
     // bloqueado por configuración. El simulador sigue funcionando,
-    // pero sin memoria entre sesiones.
+    // simplemente sin memoria entre sesiones.
     return false;
   }
 }

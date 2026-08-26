@@ -1,5 +1,5 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 8
+   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 9
    config.js · Constantes de configuración
 
    Los valores fijos del refugio, todos juntos en un solo lugar.
@@ -37,3 +37,15 @@ const PUNTOS_POR_PORTE = { chico: 1, mediano: 2, grande: 3 };
 const CLAVE_RESCATADOS = "patitas.rescatados"; // localStorage
 const CLAVE_SALIDAS = "patitas.salidas";       // localStorage
 const CLAVE_SOLICITUD = "patitas.solicitud";   // sessionStorage
+
+/* ------------------------------------------------------------
+   PADRINAZGO Y RESCATADO DE LA SEMANA
+   ------------------------------------------------------------ */
+
+// Cuánto tarda el refugio en resolver cuál es el rescatado de la
+// semana, en milisegundos.
+const DEMORA_DESTACADO = 3000;
+
+// Lo que aporta por mes quien apadrina: la mitad de lo que cuesta
+// mantener al perro.
+const PROPORCION_PADRINAZGO = 0.5;

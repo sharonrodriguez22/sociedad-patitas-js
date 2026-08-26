@@ -1,6 +1,6 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 8
-   clases/solicitud.js · La clase solicitud
+   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 9
+   clases/Solicitud.js · La clase Solicitud
 
    Modela la postulación de cada persona que quiere adoptar: guarda
    sus datos, acumula el puntaje del cuestionario y se autoevalúa.

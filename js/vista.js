@@ -1,5 +1,5 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 8
+   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 9
    vista.js · Todo lo que toca la pantalla
 
    Este archivo concentra el DOM: guarda las referencias a los nodos y
@@ -26,6 +26,9 @@ const cajaResultado = document.getElementById("resultado-solicitud");
 const botonReiniciar = document.querySelector("#btn-reiniciar");
 const panelSalidas = document.getElementById("panel-salidas");
 const contenedorSalidas = document.getElementById("contenedor-salidas");
+const panelDestacado = document.getElementById("panel-destacado");
+const contenidoDestacado = document.getElementById("contenido-destacado");
+const inputPadrino = document.getElementById("input-padrino");
 
 // Elementos que se ubican por clase
 const formSolicitud = document.querySelector("#form-solicitud");
@@ -179,28 +182,43 @@ function plantillaBotonSalida(rescatado) {
   return `<button class="boton boton-baja" data-accion="baja" data-id="${rescatado.id}" title="Sale del listado porque va a un hogar de tránsito">Pasó a tránsito</button>`;
 }
 
+// El botón de padrinazgo. Un perro ya apadrinado muestra quién lo
+// apadrinó en lugar del botón.
+function plantillaBotonPadrinazgo(rescatado) {
+  if (rescatado.apadrinado) {
+    return `<button class="boton boton-padrino" disabled title="Aporta ${enPesos(rescatado.cuotaPadrinazgo())} por mes">Apadrinado por ${rescatado.apadrinadoPor}</button>`;
+  }
+
+  return `<button class="boton boton-padrino" data-accion="apadrinar" data-id="${rescatado.id}" title="Aporta ${enPesos(rescatado.cuotaPadrinazgo())} por mes sin llevarlo a casa">Apadrinar</button>`;
+}
+
 // La tarjeta de un rescatado.
 function plantillaTarjeta(rescatado) {
   // Los datos sueltos se toman del objeto; los métodos se siguen
   // llamando sobre el rescatado.
-  const { id, nombre, sexo, tamanio, costoMensual, reservado } = rescatado;
+  const { id, nombre, sexo, tamanio, costoMensual, reservado, apadrinado } = rescatado;
 
   const claseReservada = reservado ? " tarjeta-reservada" : "";
   const claseResaltada = id === idResaltado ? " tarjeta-nueva" : "";
+  const claseApadrinada = apadrinado ? " tarjeta-apadrinada" : "";
   const etiquetaCachorro = rescatado.esCachorro()
     ? `<span class="etiqueta etiqueta-cachorro">cachorro</span>`
     : "";
+  const etiquetaPadrino = apadrinado
+    ? `<span class="etiqueta etiqueta-padrino">con padrino</span>`
+    : "";
 
   return `
-    <article class="tarjeta${claseReservada}${claseResaltada}" data-id="${id}">
+    <article class="tarjeta${claseReservada}${claseResaltada}${claseApadrinada}" data-id="${id}">
       <div class="tarjeta-cabecera">
         <h3>🐶 ${nombre}</h3>
         <span class="etiqueta etiqueta-${rescatado.estadoTexto()}">${rescatado.estadoTexto()}</span>
       </div>
-      <p class="tarjeta-datos">${sexo} · porte ${tamanio} · ${rescatado.textoEdad()} ${etiquetaCachorro}</p>
+      <p class="tarjeta-datos">${sexo} · porte ${tamanio} · ${rescatado.textoEdad()} ${etiquetaCachorro} ${etiquetaPadrino}</p>
       <p class="tarjeta-costo">Mantenimiento: ${enPesos(costoMensual)} por mes</p>
       <div class="tarjeta-acciones">
         ${plantillaBotonAccion(rescatado)}
+        ${plantillaBotonPadrinazgo(rescatado)}
         ${plantillaBotonSalida(rescatado)}
       </div>
     </article>
@@ -257,6 +275,10 @@ function renderizarEstadisticas() {
     <div class="dato">
       <span class="dato-valor">${contarAdopciones(salidas)}</span>
       <span class="dato-titulo">adoptados</span>
+    </div>
+    <div class="dato">
+      <span class="dato-valor">${contarApadrinados(rescatados)}</span>
+      <span class="dato-titulo">apadrinados</span>
     </div>
     <div class="dato">
       <span class="dato-valor">${enPesos(datos.costo)}</span>
@@ -331,6 +353,33 @@ function renderizarResultado(solicitud) {
     <p>Puntaje: ${puntaje} de ${PUNTAJE_MAXIMO}</p>
     <p>${detalle}</p>
     <p>${obtenerRecomendacion(puntosVivienda)}</p>
+  `;
+}
+
+/* ------------------------------------------------------------
+   RESCATADO DE LA SEMANA
+   El panel arranca con la clase "cargando" desde el HTML y se la
+   saca avisos.js cuando la consulta termina, salga bien o mal.
+   ------------------------------------------------------------ */
+
+// El rescatado de la semana, con su cuota de padrinazgo.
+function renderizarDestacado(rescatado, esperando, cuota) {
+  contenidoDestacado.innerHTML = `
+    <p class="destacado-nombre">🌟 ${rescatado.nombre}</p>
+    <p class="destacado-datos">${rescatado.sexo} · porte ${rescatado.tamanio} · ${rescatado.textoEdad()}</p>
+    <p class="destacado-cuota">Apadrinarlo cuesta <strong>${enPesos(cuota)} por mes</strong>,
+      la mitad de lo que sale mantenerlo.</p>
+    <p class="destacado-espera">Hay ${esperando} ${esperando === 1 ? "perro esperando" : "perros esperando"} hogar en este momento.</p>
+  `;
+}
+
+// Qué mostrar cuando el refugio no tiene ningún perro para destacar.
+function renderizarDestacadoVacio(motivo) {
+  contenidoDestacado.innerHTML = `
+    <p class="destacado-nombre">Sin destacado esta semana</p>
+    <p class="destacado-datos">No se pudo elegir un rescatado: ${motivo}.</p>
+    <p class="destacado-espera">Registra un ingreso en el paso 3 o reinicia el refugio
+      para volver a verlo.</p>
   `;
 }
 
