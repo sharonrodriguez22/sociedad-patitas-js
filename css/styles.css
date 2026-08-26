@@ -1,6 +1,6 @@
 /* ============================================================
    SOCIEDAD PATITAS - Estilos del simulador
-   Pre-Entrega 7: interfaz con DOM
+   Pre-Entrega 8: interfaz con DOM y memoria en el navegador
    ============================================================ */
 
 /* Paleta y medidas del refugio */
@@ -60,7 +60,9 @@ body {
 /* ---------------- Mensajes de feedback ---------------- */
 
 /* sticky: la franja de avisos queda pegada arriba de la pantalla al
-   hacer scroll para que el usuario siempre pueda ver los mensajes.
+   hacer scroll. Sin esto, un mensaje disparado desde un formulario
+   del final de la página aparecía fuera de la vista y el usuario
+   nunca lo llegaba a leer.
    pointer-events: none evita que la franja, cuando está vacía y es
    invisible, tape los clics de lo que quedó debajo. */
 .zona-mensajes {
@@ -450,6 +452,15 @@ select:focus {
 .etiqueta-cachorro {
   background-color: var(--naranja-suave);
   color: var(--marron);
+}
+
+/* Fila de acciones al pie del panel del refugio */
+.pie-panel {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--borde);
 }
 
 /* Mensaje cuando no hay nada que mostrar */

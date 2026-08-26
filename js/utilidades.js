@@ -1,5 +1,5 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 7
+   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 8
    utilidades.js · Funciones auxiliares
 
    Funciones cortas y puras: reciben datos, devuelven un resultado y
@@ -11,7 +11,7 @@ const enPesos = (monto) => "$" + monto.toLocaleString("es-AR");
 
 const estaLibre = (rescatado) => rescatado.estaDisponible();
 
-// EXPRESADA. Traduce el puntaje al estado de la solicitud.
+// Traduce el puntaje al estado que le corresponde a la solicitud.
 const clasificarSolicitud = function (puntaje) {
   if (puntaje >= PUNTAJE_APROBADO) {
     return "APROBADA";
@@ -24,8 +24,7 @@ const clasificarSolicitud = function (puntaje) {
   return "RECHAZADA";
 };
 
-// RETORNA UNA FUNCIÓN (fábrica + closure): fabrica el filtro de
-// compatibilidad para una vivienda concreta.
+// Arma el filtro de compatibilidad para una vivienda concreta.
 function crearFiltroPorVivienda(puntosVivienda) {
   return (rescatado) => rescatado.esCompatibleCon(puntosVivienda);
 }

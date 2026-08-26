@@ -1,10 +1,10 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 7
+   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 8
    vista.js · Todo lo que toca la pantalla
 
-   Este archivo concentra el DOM: guarda las referencias a los nodos,
-   arma el HTML de cada pieza con template strings y lo inyecta con
-   innerHTML. Ningún otro archivo modifica la pantalla.
+   Este archivo concentra el DOM: guarda las referencias a los nodos y
+   arma el HTML de cada pieza de la interfaz. Ningún otro archivo
+   modifica la pantalla.
 
    Recibe los datos de datos.js y no decide nada de la lógica del
    refugio: solo la dibuja.
@@ -17,16 +17,17 @@
    ------------------------------------------------------------ */
 
 
-// getElementById: el más directo cuando el elemento tiene id único
+// Referencias a los elementos fijos del HTML
 const zonaMensajes = document.getElementById("zona-mensajes");
 const contenedorRescatados = document.getElementById("contenedor-rescatados");
 const contenedorPreguntas = document.getElementById("contenedor-preguntas");
 const contenedorEstadisticas = document.getElementById("estadisticas");
 const cajaResultado = document.getElementById("resultado-solicitud");
+const botonReiniciar = document.querySelector("#btn-reiniciar");
 const panelSalidas = document.getElementById("panel-salidas");
 const contenedorSalidas = document.getElementById("contenedor-salidas");
 
-// querySelector: acepta cualquier selector CSS
+// Elementos que se ubican por clase
 const formSolicitud = document.querySelector("#form-solicitud");
 const formRescatado = document.querySelector("#form-rescatado");
 const botonLimpiar = document.querySelector("#btn-limpiar-solicitud");
@@ -50,7 +51,9 @@ const inputCosto = document.querySelector("#input-costo");
    Datos que no viven en el array pero cambian con el uso. Los
    escribe main.js y los lee el renderizado.
    ------------------------------------------------------------ */
-let solicitudActual = null; // la última solicitud evaluada
+// La solicitud se levanta de sessionStorage: si la persona refresca
+// la página en medio del trámite, no pierde lo que ya había cargado.
+let solicitudActual = cargarSolicitud();
 let textoBusqueda = "";     // lo que se escribió en el buscador
 let idResaltado = null;     // tarjeta que se resalta en el próximo render
 let idPendienteBaja = null; // tarjeta que está esperando confirmación de salida
@@ -60,8 +63,8 @@ let idPendienteBaja = null; // tarjeta que está esperando confirmación de sali
    3) FEEDBACK VISUAL
    ------------------------------------------------------------ */
 
-// Crea un aviso con createElement, lo cuelga del DOM con appendChild
-// y lo saca solo con remove() después de unos segundos.
+// Muestra un aviso en la franja superior. Se retira solo después de
+// unos segundos.
 function mostrarMensaje(texto, tipo) {
   const aviso = document.createElement("p");
   aviso.className = "aviso aviso-" + tipo;
@@ -90,7 +93,7 @@ function marcarError(campo, texto) {
 
 // Borra las marcas y los textos de error de todo el formulario.
 function limpiarErrores() {
-  // querySelectorAll devuelve una lista de nodos que se recorre con forEach
+  // Recorre todos los campos y textos de error del formulario
   document.querySelectorAll(".campo-error").forEach((campo) => campo.classList.remove("campo-error"));
   document.querySelectorAll(".error-campo").forEach((aviso) => aviso.remove());
 }
@@ -98,11 +101,11 @@ function limpiarErrores() {
 
 /* ------------------------------------------------------------
    4) RENDERIZADO
-   Cada función arma un texto con template strings (backticks) y lo
-   inyecta con innerHTML en su contenedor.
+   Cada función arma el HTML de su sección y lo vuelca en el
+   contenedor que le corresponde.
    ------------------------------------------------------------ */
 
-// El cuestionario sale del array PREGUNTAS: map arma los checkbox.
+// El cuestionario se arma a partir del array PREGUNTAS de config.js.
 function renderizarPreguntas() {
   contenedorPreguntas.innerHTML = PREGUNTAS
     .map((pregunta, indice) => `
@@ -114,12 +117,11 @@ function renderizarPreguntas() {
     .join("");
 }
 
-// INFORMA: true si el perro está reservado justamente por la persona
-// que tiene la solicitud abierta en este momento.
+// True si el perro está reservado justamente por la persona que tiene
+// la solicitud abierta en este momento.
 function esSuPropiaReserva(rescatado) {
-  return rescatado.reservado
-    && solicitudActual !== null
-    && rescatado.reservadoPor === solicitudActual.nombreAdoptante;
+  // Contempla el caso de que todavía no haya ninguna solicitud cargada.
+  return rescatado.reservado && rescatado.reservadoPor === solicitudActual?.nombreAdoptante;
 }
 
 // Decide qué botón de acción va en cada tarjeta según el estado de
@@ -177,22 +179,26 @@ function plantillaBotonSalida(rescatado) {
   return `<button class="boton boton-baja" data-accion="baja" data-id="${rescatado.id}" title="Sale del listado porque va a un hogar de tránsito">Pasó a tránsito</button>`;
 }
 
-// La tarjeta de un rescatado, armada con backticks.
+// La tarjeta de un rescatado.
 function plantillaTarjeta(rescatado) {
-  const claseReservada = rescatado.reservado ? " tarjeta-reservada" : "";
-  const claseResaltada = rescatado.id === idResaltado ? " tarjeta-nueva" : "";
+  // Los datos sueltos se toman del objeto; los métodos se siguen
+  // llamando sobre el rescatado.
+  const { id, nombre, sexo, tamanio, costoMensual, reservado } = rescatado;
+
+  const claseReservada = reservado ? " tarjeta-reservada" : "";
+  const claseResaltada = id === idResaltado ? " tarjeta-nueva" : "";
   const etiquetaCachorro = rescatado.esCachorro()
     ? `<span class="etiqueta etiqueta-cachorro">cachorro</span>`
     : "";
 
   return `
-    <article class="tarjeta${claseReservada}${claseResaltada}" data-id="${rescatado.id}">
+    <article class="tarjeta${claseReservada}${claseResaltada}" data-id="${id}">
       <div class="tarjeta-cabecera">
-        <h3>🐶 ${rescatado.nombre}</h3>
+        <h3>🐶 ${nombre}</h3>
         <span class="etiqueta etiqueta-${rescatado.estadoTexto()}">${rescatado.estadoTexto()}</span>
       </div>
-      <p class="tarjeta-datos">${rescatado.sexo} · porte ${rescatado.tamanio} · ${rescatado.textoEdad()} ${etiquetaCachorro}</p>
-      <p class="tarjeta-costo">Mantenimiento: ${enPesos(rescatado.costoMensual)} por mes</p>
+      <p class="tarjeta-datos">${sexo} · porte ${tamanio} · ${rescatado.textoEdad()} ${etiquetaCachorro}</p>
+      <p class="tarjeta-costo">Mantenimiento: ${enPesos(costoMensual)} por mes</p>
       <div class="tarjeta-acciones">
         ${plantillaBotonAccion(rescatado)}
         ${plantillaBotonSalida(rescatado)}
@@ -201,7 +207,7 @@ function plantillaTarjeta(rescatado) {
   `;
 }
 
-// Recorre el array con map y vuelca todas las tarjetas de una vez.
+// Vuelca en pantalla las tarjetas de todos los rescatados.
 function renderizarRescatados() {
   const visibles = obtenerListaVisible();
 
@@ -218,7 +224,7 @@ function renderizarRescatados() {
   idResaltado = null;
 }
 
-// Los números del refugio, calculados con reduce.
+// Los números que se muestran en la barra superior del refugio.
 function renderizarEstadisticas() {
   const datos = calcularEstadisticas(rescatados);
   const visibles = obtenerListaVisible().length;
@@ -270,20 +276,22 @@ function renderizarSalidas() {
 
   panelSalidas.classList.remove("oculto");
 
-  // map convierte cada salida en una línea de la lista
-  contenedorSalidas.innerHTML = salidas
-    .map((salida) => {
-      const esAdopcion = salida.motivo === MOTIVO_ADOPCION;
+  // Se trabaja sobre una copia para mostrar las salidas más recientes
+  // primero, sin alterar el orden cronológico en el que se guardan.
+  contenedorSalidas.innerHTML = [...salidas]
+    .reverse()
+    .map(({ rescatado, motivo, destino }) => {
+      const esAdopcion = motivo === MOTIVO_ADOPCION;
       const icono = esAdopcion ? "🎉" : "🏠";
       const clase = esAdopcion ? "salida-adopcion" : "salida-transito";
       const detalle = esAdopcion
-        ? `adoptad${salida.rescatado.sexo === "hembra" ? "a" : "o"} por <strong>${salida.destino}</strong>`
-        : `pasó a ${salida.destino}`;
+        ? `adoptad${rescatado.sexo === "hembra" ? "a" : "o"} por <strong>${destino}</strong>`
+        : `pasó a ${destino}`;
 
       return `
         <li class="salida ${clase}">
           <span class="salida-icono">${icono}</span>
-          <span class="salida-texto"><strong>${salida.rescatado.nombre}</strong> · ${detalle}</span>
+          <span class="salida-texto"><strong>${rescatado.nombre}</strong> · ${detalle}</span>
         </li>
       `;
     })
@@ -292,36 +300,37 @@ function renderizarSalidas() {
 
 // Dibuja el resultado de la solicitud debajo del formulario.
 function renderizarResultado(solicitud) {
-  const porcentaje = Math.round((solicitud.puntaje / PUNTAJE_MAXIMO) * 100);
+  // Datos de la solicitud que se van a mostrar
+  const { nombreAdoptante, tipoVivienda, puntaje, puntosVivienda, estado } = solicitud;
+
+  const porcentaje = Math.round((puntaje / PUNTAJE_MAXIMO) * 100);
   const compatibles = rescatados
-    .filter(crearFiltroPorVivienda(solicitud.puntosVivienda))
+    .filter(crearFiltroPorVivienda(puntosVivienda))
     .filter(estaLibre);
 
   let titulo = "";
   let detalle = "";
 
-  if (solicitud.estado === "APROBADA") {
+  if (estado === "APROBADA") {
     titulo = "✅ Solicitud APROBADA";
-    detalle = `Ya puedes elegir a tu compañero. Tienes ${compatibles.length} perro(s) compatibles con ${solicitud.tipoVivienda}.`;
-  } else if (solicitud.estado === "PREAPROBADA") {
+    detalle = `Ya puedes elegir a tu compañero. Tienes ${compatibles.length} perro(s) compatibles con ${tipoVivienda}.`;
+  } else if (estado === "PREAPROBADA") {
     titulo = "🟡 Solicitud PREAPROBADA";
     detalle = `Puedes <strong>reservar</strong> uno de los ${compatibles.length} perro(s) compatibles, pero todavía no llevarlo: primero coordinamos la visita al domicilio.`;
   } else {
-    const faltaron = PUNTAJE_SEGUIMIENTO - solicitud.puntaje;
+    const faltaron = PUNTAJE_SEGUIMIENTO - puntaje;
     titulo = "⛔ Solicitud RECHAZADA por ahora";
     detalle = `Te faltaron ${faltaron} punto(s) para el mínimo. ¿Te sumas como hogar de tránsito?`;
   }
 
-  const clase = "resultado-" + solicitud.estado.toLowerCase();
-
-  cajaResultado.className = "resultado " + clase;
+  cajaResultado.className = "resultado resultado-" + estado.toLowerCase();
   cajaResultado.innerHTML = `
     <h3>${titulo}</h3>
-    <p><strong>${solicitud.nombreAdoptante}</strong> · ${solicitud.tipoVivienda}</p>
+    <p><strong>${nombreAdoptante}</strong> · ${tipoVivienda}</p>
     <div class="barra"><div class="barra-relleno" style="width: ${porcentaje}%"></div></div>
-    <p>Puntaje: ${solicitud.puntaje} de ${PUNTAJE_MAXIMO}</p>
+    <p>Puntaje: ${puntaje} de ${PUNTAJE_MAXIMO}</p>
     <p>${detalle}</p>
-    <p>${obtenerRecomendacion(solicitud.puntosVivienda)}</p>
+    <p>${obtenerRecomendacion(puntosVivienda)}</p>
   `;
 }
 

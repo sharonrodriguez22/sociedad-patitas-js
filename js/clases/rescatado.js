@@ -1,6 +1,6 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 7
-   clases/rescatado.js · La clase Rescatado
+   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 8
+   clases/rescatado.js · La clase rescatado
 
    Modela a cada perro del refugio: agrupa sus datos (propiedades)
    y sus acciones (métodos). No sabe nada del DOM ni de la pantalla:
@@ -11,7 +11,7 @@
 
 class Rescatado {
   constructor(id, nombre, sexo, edad, tamanio, costoMensual) {
-    this.id = id;                 // identificador único, sirve para el data-id del HTML
+    this.id = id;                 // identificador único dentro del refugio
     this.nombre = nombre;
     this.sexo = sexo;             // "macho" o "hembra"
     this.edad = edad;             // en años
@@ -29,7 +29,7 @@ class Rescatado {
     this.adoptadoPor = "";
   }
 
-  // INFORMA: la edad escrita en singular o plural.
+  // Devuelve la edad escrita en singular o plural.
   textoEdad() {
     if (this.edad === 1) {
       return "1 año";
@@ -38,7 +38,7 @@ class Rescatado {
     return this.edad + " años";
   }
 
-  // INFORMA: en qué situación está, para la etiqueta de la tarjeta.
+  // Situación actual del perro, para la etiqueta de la tarjeta.
   estadoTexto() {
     if (this.adoptado) {
       return "adoptado";
@@ -51,23 +51,23 @@ class Rescatado {
     return "disponible";
   }
 
-  // CALCULA: compara el espacio de la vivienda con el que necesita.
+  // Compara el espacio de la vivienda con el que necesita este perro.
   esCompatibleCon(puntosVivienda) {
     return puntosVivienda >= this.puntosViviendaMinimos;
   }
 
-  // INFORMA: true si todavía es cachorro.
+  // True si todavía es cachorro.
   esCachorro() {
     return this.edad <= EDAD_CACHORRO;
   }
 
-  // INFORMA: true solo si nadie lo adoptó ni lo reservó todavía.
+  // True solo si nadie lo adoptó ni lo reservó todavía.
   estaDisponible() {
     return this.adoptado === false && this.reservado === false;
   }
 
-  // MODIFICA: lo aparta para una solicitud PREAPROBADA. Todavía no es
-  // una adopción: el perro sigue en el refugio hasta la visita.
+  // Lo aparta para una solicitud PREAPROBADA. Todavía no es una
+  // adopción: el perro sigue en el refugio hasta la visita.
   reservar(nombreAdoptante) {
     if (this.estaDisponible() === false) {
       return false;
@@ -78,8 +78,8 @@ class Rescatado {
     return true;
   }
 
-  // MODIFICA: lo marca como adoptado. Retorna false si ya estaba
-  // adoptado o si lo tiene reservado otra persona.
+  // Lo marca como adoptado. Retorna false si ya estaba adoptado o si
+  // lo tiene reservado otra persona.
   adoptar(nombreAdoptante) {
     if (this.adoptado) {
       return false;

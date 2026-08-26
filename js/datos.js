@@ -1,23 +1,109 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 7
-   datos.js · El array de objetos y sus consultas
+   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 8
+   datos.js · El array de objetos, su memoria y sus consultas
 
-   La capa de datos del simulador. Crea las instancias con new, las
-   guarda en un array y ofrece las funciones de orden superior para
-   consultarlo (find, filter, reduce).
+   La capa de datos del simulador. Al cargar la página levanta el
+   estado guardado en el navegador; si no hay nada guardado, arranca
+   con los perros iniciales. Después de cada cambio vuelve a guardar.
 
    Ninguna función de este archivo toca el DOM.
    ============================================================ */
 
-const rocco = new Rescatado(1, "Rocco", "macho", 3, "grande", 25000);
-const luna = new Rescatado(2, "Luna", "hembra", 2, "chico", 12000);
-const pelusa = new Rescatado(3, "Pelusa", "hembra", 1, "mediano", 18000);
-const nube = new Rescatado(4, "Nube", "hembra", 5, "chico", 14000);
-const tobias = new Rescatado(5, "Tobías", "macho", 7, "mediano", 21000);
-const nina = new Rescatado(6, "Nina", "hembra", 1, "chico", 15000);
-const milo = new Rescatado(7, "Milo", "macho", 4, "mediano", 16000);
+/* ------------------------------------------------------------
+   1) LOS PERROS CON LOS QUE ABRE EL REFUGIO
+   Solo se usan la primera vez, o cuando se reinicia el simulador.
+   ------------------------------------------------------------ */
+function crearRescatadosIniciales() {
+  const rocco = new Rescatado(1, "Rocco", "macho", 3, "grande", 25000);
+  const luna = new Rescatado(2, "Luna", "hembra", 2, "chico", 12000);
+  const pelusa = new Rescatado(3, "Pelusa", "hembra", 1, "mediano", 18000);
+  const nube = new Rescatado(4, "Nube", "hembra", 5, "chico", 14000);
+  const tobias = new Rescatado(5, "Tobías", "macho", 7, "mediano", 21000);
+  const nina = new Rescatado(6, "Nina", "hembra", 1, "chico", 15000);
+  const milo = new Rescatado(7, "Milo", "macho", 4, "mediano", 16000);
 
-const rescatados = [rocco, luna, pelusa, nube, tobias, nina, milo];
+  return [rocco, luna, pelusa, nube, tobias, nina, milo];
+}
+
+/* ------------------------------------------------------------
+   2) REHIDRATACIÓN
+   Lo que vuelve del navegador conserva los datos de cada perro, pero
+   no sus métodos: así como sale, no sabría responder esCompatibleCon()
+   ni adoptar(). Por eso cada perro guardado se vuelve a construir como
+   instancia de Rescatado antes de entrar al refugio.
+   ------------------------------------------------------------ */
+function rehidratarRescatado(datos) {
+  const {
+    id,
+    nombre,
+    sexo,
+    edad,
+    tamanio,
+    costoMensual,
+    reservado,
+    reservadoPor,
+    adoptado,
+    adoptadoPor
+  } = datos;
+
+  const rescatado = new Rescatado(id, nombre, sexo, edad, tamanio, costoMensual);
+
+  // El constructor siempre crea al perro disponible, así que hay que
+  // devolverle el estado de reserva y adopción que tenía guardado.
+  rescatado.reservado = reservado;
+  rescatado.reservadoPor = reservadoPor;
+  rescatado.adoptado = adoptado;
+  rescatado.adoptadoPor = adoptadoPor;
+
+  return rescatado;
+}
+
+// Lo mismo para una solicitud guardada en la sesión.
+function rehidratarSolicitud(datos) {
+  const { nombreAdoptante, edad, tipoVivienda, puntosVivienda, puntaje, estado } = datos;
+
+  const solicitud = new Solicitud(nombreAdoptante, edad, tipoVivienda, puntosVivienda);
+  solicitud.puntaje = puntaje;
+  solicitud.estado = estado;
+
+  return solicitud;
+}
+
+/* ------------------------------------------------------------
+   3) CARGA DEL ESTADO
+   ------------------------------------------------------------ */
+
+// Recupera los perros guardados. Si el refugio se abre por primera
+// vez y no hay nada en memoria, arranca con la lista inicial.
+function cargarRescatados() {
+  const guardados = leerLocal(CLAVE_RESCATADOS);
+  return guardados?.map(rehidratarRescatado) ?? crearRescatadosIniciales();
+}
+
+// Recupera el registro de salidas. Cada salida guardada tiene la
+// forma { rescatado, motivo, destino }.
+function cargarSalidas() {
+  const guardadas = leerLocal(CLAVE_SALIDAS);
+
+  return guardadas?.map(({ rescatado, motivo, destino }) => ({
+    rescatado: rehidratarRescatado(rescatado),
+    motivo: motivo,
+    destino: destino
+  })) ?? [];
+}
+
+// La solicitud vive en sessionStorage: sobrevive a un F5, no a cerrar
+// la pestaña.
+function cargarSolicitud() {
+  const guardada = leerSesion(CLAVE_SOLICITUD);
+  return guardada ? rehidratarSolicitud(guardada) : null;
+}
+
+/* ------------------------------------------------------------
+   4) EL ESTADO VIVO
+   Se arma una sola vez, al cargar la página.
+   ------------------------------------------------------------ */
+const rescatados = cargarRescatados();
 
 /* ------------------------------------------------------------
    REGISTRO DE SALIDAS
@@ -25,14 +111,13 @@ const rescatados = [rocco, luna, pelusa, nube, tobias, nina, milo];
    pasó con él. Por eso no se borra sin más: sale de "rescatados" y
    entra en "salidas", que guarda un objeto literal por cada caso.
    ------------------------------------------------------------ */
-const salidas = [];
+const salidas = cargarSalidas();
 
 // Motivos posibles de una salida
 const MOTIVO_ADOPCION = "adopcion";
 const MOTIVO_TRANSITO = "transito";
 
-// Saca al perro del refugio y lo anota en el registro.
-// splice lo quita de un array y push lo agrega al otro.
+// Saca al perro del refugio y lo anota en el registro de salidas.
 // Retorna el objeto que quedó anotado.
 function registrarSalida(rescatado, motivo, destino) {
   const posicion = rescatados.indexOf(rescatado);
@@ -47,16 +132,39 @@ function registrarSalida(rescatado, motivo, destino) {
   return salida;
 }
 
-// filter: cuántas de las salidas fueron adopciones.
+// Cuántas de las salidas fueron adopciones.
 function contarAdopciones(lista) {
   return lista.filter((salida) => salida.motivo === MOTIVO_ADOPCION).length;
+}
+
+/* ------------------------------------------------------------
+   GUARDADO Y REINICIO
+   ------------------------------------------------------------ */
+
+// Se llama después de cada cambio: alta, adopción, reserva o salida.
+// Retorna false si el navegador no dejó guardar.
+function persistirEstado() {
+  const guardoRescatados = guardarLocal(CLAVE_RESCATADOS, rescatados);
+  const guardoSalidas = guardarLocal(CLAVE_SALIDAS, salidas);
+
+  return guardoRescatados && guardoSalidas;
+}
+
+// Borra lo guardado y vuelve a dejar el refugio como el primer día.
+function reiniciarRefugio() {
+  vaciarAlmacenamiento();
+
+  rescatados.length = 0;
+  rescatados.push(...crearRescatadosIniciales());
+
+  salidas.length = 0;
 }
 
 /* ------------------------------------------------------------
    CONSULTAS SOBRE EL ARRAY
    ------------------------------------------------------------ */
 
-// filter + includes: los que coinciden con lo escrito en el buscador.
+// Los rescatados que coinciden con lo escrito en el buscador.
 function filtrarPorTexto(lista, texto) {
   const buscado = texto.trim().toLowerCase();
 
@@ -67,23 +175,25 @@ function filtrarPorTexto(lista, texto) {
   return lista.filter((rescatado) => rescatado.nombre.toLowerCase().includes(buscado));
 }
 
-// find: devuelve el objeto con ese id, o undefined.
+// Busca un rescatado por su id.
 function buscarPorId(lista, id) {
   return lista.find((rescatado) => rescatado.id === id);
 }
 
-// find: devuelve el objeto con ese nombre, o undefined.
+// Busca un rescatado por su nombre.
 function buscarPorNombre(lista, nombre) {
   const buscado = nombre.trim().toLowerCase();
   return lista.find((rescatado) => rescatado.nombre.toLowerCase() === buscado);
 }
 
-// reduce: el id más alto + 1, para que cada alta tenga uno propio.
+// Calcula el id que le toca al próximo ingreso: el más alto que haya,
+// más uno.
 function generarId(lista) {
   return lista.reduce((mayor, rescatado) => Math.max(mayor, rescatado.id), 0) + 1;
 }
 
-// reduce: junta en un solo objeto todos los números del refugio.
+// Junta en un solo objeto los números que se muestran en la barra
+// superior del refugio.
 function calcularEstadisticas(lista) {
   return lista.reduce(
     (resumen, rescatado) => {
