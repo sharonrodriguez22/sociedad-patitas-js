@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sociedad Patitas | Simulador de Adopción</title>
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- El JavaScript está separado por responsabilidades. Todos los
+       scripts llevan defer: se descargan en paralelo pero se ejecutan
+       en este orden, recién cuando el HTML terminó de leerse.
+       El orden importa: datos.js crea las instancias, así que las
+       clases tienen que estar definidas antes. -->
+  <script src="js/config.js" defer></script>
+  <script src="js/clases/Rescatado.js" defer></script>
+  <script src="js/clases/Solicitud.js" defer></script>
+  <script src="js/almacenamiento.js" defer></script>
+  <script src="js/utilidades.js" defer></script>
+  <script src="js/datos.js" defer></script>
+  <script src="js/vista.js" defer></script>
+  <script src="js/avisos.js" defer></script>
+  <script src="js/main.js" defer></script>
+</head>
+<body>
+
+  <header class="encabezado">
+    <h1>🐾 Sociedad Patitas</h1>
+    <p class="subtitulo">Refugio canino · Simulador de adopción</p>
+  </header>
+
+  <!-- Franja donde el JS inyecta los mensajes de feedback -->
+  <div id="zona-mensajes" class="zona-mensajes" role="status" aria-live="polite"></div>
+
+  <main class="tablero">
+
+    <!-- ============================================================
+         RESCATADO DE LA SEMANA
+         Arranca con la clase "cargando": el refugio tarda unos
+         segundos en resolver a quién difunde, y mientras tanto el
+         resto de la pantalla funciona con normalidad.
+         ============================================================ -->
+    <section class="panel panel-ancho panel-destacado cargando" id="panel-destacado">
+      <h2>🌟 Rescatado de la semana</h2>
+      <div id="contenido-destacado" class="destacado-cuerpo">
+        <p class="destacado-espera">Consultando al refugio…</p>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PANEL 1 · RESCATADOS DEL REFUGIO
+         ============================================================ -->
+    <section class="panel panel-ancho" id="panel-refugio">
+      <h2><span class="numero">1</span> Rescatados del refugio</h2>
+      <p class="ayuda">Estos son los perros que esperan hogar. Para adoptar o reservar
+        alguno, primero completa la solicitud del paso 2. Para apadrinar no hace falta
+        solicitud: alcanza con dejar tu nombre. Todo lo que hagas queda guardado en tu
+        navegador: si recargas la página, sigue estando.</p>
+
+      <div class="barra-superior">
+        <div class="campo campo-busqueda">
+          <label for="input-buscar">Buscar por nombre</label>
+          <input type="search" id="input-buscar" placeholder="Escribe un nombre… (Esc para limpiar)" autocomplete="off">
+        </div>
+        <div class="campo campo-padrino">
+          <label for="input-padrino">Apadrinar a nombre de</label>
+          <input type="text" id="input-padrino" placeholder="Tu nombre y apellido" autocomplete="off">
+        </div>
+        <div id="estadisticas" class="estadisticas"></div>
+      </div>
+
+      <!-- Aquí el JS inyecta las tarjetas de cada rescatado -->
+      <div id="contenedor-rescatados" class="grilla"></div>
+
+      <div class="pie-panel">
+        <button type="button" id="btn-reiniciar" class="boton boton-secundario"
+                data-confirmando="no"
+                title="Borra los datos guardados en el navegador y vuelve al estado inicial">
+          Reiniciar el refugio
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         REGISTRO DE SALIDAS
+         Arranca oculto con la clase "oculto" y el JS se la saca en
+         cuanto hay una primera salida, para no dejar una caja vacía.
+         ============================================================ -->
+    <section class="panel panel-ancho panel-registro oculto" id="panel-salidas">
+      <h2>🎉 Registro de salidas</h2>
+      <p class="ayuda">Cada perro que deja el refugio queda anotado aquí, con el
+        motivo por el que se fue.</p>
+
+      <!-- Aquí el JS inyecta una línea por cada salida -->
+      <ul id="contenedor-salidas" class="registro"></ul>
+    </section>
+
+    <!-- ============================================================
+         PANEL 2 · SOLICITUD DE ADOPCIÓN
+         ============================================================ -->
+    <section class="panel" id="panel-solicitud">
+      <h2><span class="numero">2</span> Tu solicitud de adopción</h2>
+      <p class="ayuda">Completa tus datos y el cuestionario. El puntaje define si puedes
+        adoptar en el momento o si primero coordinamos una visita.</p>
+
+      <form id="form-solicitud" class="formulario" novalidate>
+        <div class="campo">
+          <label for="input-nombre">Nombre y apellido</label>
+          <input type="text" id="input-nombre" placeholder="Ej: Sharon Rodríguez" autocomplete="off">
+        </div>
+
+        <div class="fila">
+          <div class="campo">
+            <label for="input-edad">Edad</label>
+            <input type="number" id="input-edad" min="1" max="100" placeholder="Ej: 30">
+          </div>
+
+          <div class="campo">
+            <label for="select-vivienda">Tipo de vivienda</label>
+            <select id="select-vivienda">
+              <option value="">Elige una opción</option>
+              <option value="3">Casa con patio</option>
+              <option value="2">Casa sin patio</option>
+              <option value="2">Departamento con balcón</option>
+              <option value="1">Departamento sin balcón</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- El cuestionario lo genera el JS recorriendo el array PREGUNTAS -->
+        <fieldset class="cuestionario">
+          <legend>Cuestionario de responsabilidad</legend>
+          <div id="contenedor-preguntas"></div>
+        </fieldset>
+
+        <div class="acciones-form">
+          <button type="submit" class="boton boton-primario">Evaluar solicitud</button>
+          <button type="button" id="btn-limpiar-solicitud" class="boton boton-secundario">Limpiar</button>
+        </div>
+      </form>
+
+      <!-- Aquí el JS inyecta el resultado de la evaluación -->
+      <div id="resultado-solicitud" class="resultado"></div>
+    </section>
+
+    <!-- ============================================================
+         PANEL 3 · ALTA DE UN RESCATADO
+         ============================================================ -->
+    <section class="panel" id="panel-alta">
+      <h2><span class="numero">3</span> Registrar un ingreso</h2>
+      <p class="ayuda">Cuando llega un perro nuevo al refugio, se carga aquí y aparece
+        en la lista al instante.</p>
+
+      <form id="form-rescatado" class="formulario" novalidate>
+        <div class="campo">
+          <label for="input-nombre-perro">Nombre del perro</label>
+          <input type="text" id="input-nombre-perro" placeholder="Ej: Trueno" autocomplete="off">
+        </div>
+
+        <div class="fila">
+          <div class="campo">
+            <label for="select-sexo">Sexo</label>
+            <select id="select-sexo">
+              <option value="">Elige</option>
+              <option value="hembra">Hembra</option>
+              <option value="macho">Macho</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="input-edad-perro">Edad (años)</label>
+            <input type="number" id="input-edad-perro" min="0" max="25" placeholder="Ej: 2">
+          </div>
+        </div>
+
+        <div class="fila">
+          <div class="campo">
+            <label for="select-porte">Porte</label>
+            <select id="select-porte">
+              <option value="">Elige</option>
+              <option value="chico">Chico</option>
+              <option value="mediano">Mediano</option>
+              <option value="grande">Grande</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="input-costo">Mantenimiento mensual ($)</label>
+            <input type="number" id="input-costo" min="0" step="500" placeholder="Ej: 15000">
+          </div>
+        </div>
+
+        <div class="acciones-form">
+          <button type="submit" class="boton boton-primario">+ Agregar al refugio</button>
+        </div>
+      </form>
+    </section>
+
+  </main>
+
+  <footer class="pie">Pre-Entrega 9 · Curso de JavaScript · Coderhouse</footer>
+
+</body>
+</html>
