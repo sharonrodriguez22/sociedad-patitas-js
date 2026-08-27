@@ -1,5 +1,5 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 8
+   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 9
    utilidades.js · Funciones auxiliares
 
    Funciones cortas y puras: reciben datos, devuelven un resultado y

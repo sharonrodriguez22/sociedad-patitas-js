@@ -1,5 +1,5 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 8
+   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 9
    datos.js · El array de objetos, su memoria y sus consultas
 
    La capa de datos del simulador. Al cargar la página levanta el
@@ -43,17 +43,22 @@ function rehidratarRescatado(datos) {
     reservado,
     reservadoPor,
     adoptado,
-    adoptadoPor
+    adoptadoPor,
+    apadrinado,
+    apadrinadoPor
   } = datos;
 
   const rescatado = new Rescatado(id, nombre, sexo, edad, tamanio, costoMensual);
 
   // El constructor siempre crea al perro disponible, así que hay que
-  // devolverle el estado de reserva y adopción que tenía guardado.
+  // devolverle el estado de reserva, adopción y padrinazgo que tenía
+  // guardado.
   rescatado.reservado = reservado;
   rescatado.reservadoPor = reservadoPor;
   rescatado.adoptado = adoptado;
   rescatado.adoptadoPor = adoptadoPor;
+  rescatado.apadrinado = apadrinado ?? false;
+  rescatado.apadrinadoPor = apadrinadoPor ?? "";
 
   return rescatado;
 }
@@ -130,6 +135,11 @@ function registrarSalida(rescatado, motivo, destino) {
   salidas.push(salida);
 
   return salida;
+}
+
+// Cuántos perros del refugio ya tienen padrino o madrina.
+function contarApadrinados(lista) {
+  return lista.filter((rescatado) => rescatado.apadrinado).length;
 }
 
 // Cuántas de las salidas fueron adopciones.

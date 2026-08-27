@@ -1,6 +1,6 @@
 /* ============================================================
    SOCIEDAD PATITAS - Estilos del simulador
-   Pre-Entrega 8: interfaz con DOM y memoria en el navegador
+   Pre-Entrega 9: Asincronismo y Promesas
    ============================================================ */
 
 /* Paleta y medidas del refugio */
@@ -600,4 +600,78 @@ select:focus {
   .tablero {
     grid-template-columns: 1fr;
   }
+}
+
+/* ---------------- Rescatado de la semana ---------------- */
+
+/* El panel llega antes que su contenido: mientras el refugio resuelve
+   a quién difunde, se muestra apagado y con el texto latiendo. */
+.panel-destacado {
+  background: linear-gradient(135deg, var(--naranja-suave), var(--crema));
+  border-color: var(--naranja);
+}
+
+.panel-destacado.cargando .destacado-cuerpo {
+  opacity: 0.55;
+  animation: latido 1.2s ease-in-out infinite;
+}
+
+@keyframes latido {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.75; }
+}
+
+.destacado-cuerpo {
+  transition: opacity 0.3s ease;
+}
+
+.destacado-nombre {
+  margin: 0 0 4px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--marron);
+}
+
+.destacado-datos {
+  margin: 0 0 8px;
+  color: var(--gris-suave);
+  text-transform: capitalize;
+}
+
+.destacado-cuota {
+  margin: 0 0 6px;
+}
+
+.destacado-espera {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--gris-suave);
+}
+
+/* ---------------- Padrinazgo ---------------- */
+
+.campo-padrino {
+  min-width: 200px;
+}
+
+.boton-padrino {
+  background-color: var(--amarillo-suave);
+  border: 1px solid var(--amarillo);
+  color: var(--amarillo);
+}
+
+.boton-padrino:hover:not(:disabled) {
+  background-color: var(--amarillo);
+  color: #fff;
+}
+
+/* El perro apadrinado sigue en el refugio: se marca con un borde
+   dorado, no se apaga como el reservado. */
+.tarjeta-apadrinada {
+  border-left: 4px solid var(--amarillo);
+}
+
+.etiqueta-padrino {
+  background-color: var(--amarillo-suave);
+  color: var(--amarillo);
 }

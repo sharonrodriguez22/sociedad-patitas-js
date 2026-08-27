@@ -1,9 +1,12 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 8
+   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 9
    main.js · Eventos y arranque
 
    El punto de entrada. Conecta lo que hace el usuario con la lógica
    del refugio y le pide a vista.js que vuelva a dibujar.
+
+   Es el último script que carga: para cuando se ejecuta, las clases,
+   los datos y las funciones de dibujo ya están disponibles.
    ============================================================ */
 
 /* ------------------------------------------------------------
@@ -153,6 +156,41 @@ function manejarAltaRescatado(evento) {
   mostrarMensaje(nombre + " ingresó al refugio. Ya aparece en la lista. 🐾", "exito");
 }
 
+// Registra un padrinazgo. El nombre lo escribe la persona en la barra
+// del refugio, así que puede llegar vacío, demasiado corto o repetido
+// sobre un perro que otro ya apadrinó: por eso el bloque va dentro de
+// un try y los tres desenlaces se resuelven en un solo lugar.
+function apadrinarRescatado(rescatado) {
+  limpiarErrores();
+
+  try {
+    const nombrePadrino = inputPadrino.value.trim();
+
+    if (nombrePadrino.length < LARGO_MINIMO_NOMBRE) {
+      throw new Error("Deja tu nombre completo para registrar el padrinazgo.");
+    }
+
+    if (rescatado.apadrinar(nombrePadrino) === false) {
+      throw new Error(rescatado.nombre + " ya tiene padrino o madrina.");
+    }
+
+    persistirEstado();
+    idResaltado = rescatado.id;
+
+    mostrarMensaje(
+      "💛 " + nombrePadrino + " apadrinó a " + rescatado.nombre +
+      ". Aporta " + enPesos(rescatado.cuotaPadrinazgo()) + " por mes y el perro sigue esperando hogar.",
+      "exito"
+    );
+  } catch (error) {
+    marcarError(inputPadrino, error.message);
+    mostrarMensaje(error.message, "error");
+  } finally {
+    // Salga bien o mal, la pantalla queda al día con lo que pasó.
+    actualizarVista();
+  }
+}
+
 // Clics dentro del contenedor de tarjetas.
 // Se pone UN solo listener en el contenedor en lugar de uno por botón:
 // como las tarjetas se vuelven a dibujar en cada render, sus botones
@@ -174,8 +212,7 @@ function manejarClickEnTarjetas(evento) {
   }
 
   // Red de seguridad: sin una solicitud aceptada no se entrega ni se
-  // reserva ningún perro. Los botones ya vienen deshabilitados, pero
-  // la comprobación evita cualquier sorpresa.
+  // reserva ningún perro. Los botones ya vienen deshabilitados.
   if (solicitudActual === null || solicitudActual.fueAceptada() === false) {
     if (accion === "adoptar" || accion === "reservar" || accion === "confirmar") {
       mostrarMensaje("Primero completa el formulario de solicitud.", "error");
@@ -208,6 +245,12 @@ function manejarClickEnTarjetas(evento) {
 
     actualizarVista();
     mostrarMensaje("🎉 " + rescatado.nombre + " se va con " + rescatado.adoptadoPor + ". Quedó anotado en el registro de salidas.", "exito");
+    return;
+  }
+
+  if (accion === "apadrinar") {
+    idPendienteBaja = null;
+    apadrinarRescatado(rescatado);
     return;
   }
 
@@ -351,3 +394,8 @@ solicitudActual && renderizarResultado(solicitudActual);
 solicitudActual && repoblarFormularioSolicitud(solicitudActual);
 
 mostrarMensaje(armarMensajeDeBienvenida(), "info");
+
+// El rescatado de la semana llega unos segundos más tarde. No se usa
+// await acá: la llamada queda en curso y el simulador sigue respondiendo
+// mientras tanto.
+cargarDestacadoDeLaSemana();

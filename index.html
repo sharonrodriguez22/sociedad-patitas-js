@@ -18,6 +18,7 @@
   <script src="js/utilidades.js" defer></script>
   <script src="js/datos.js" defer></script>
   <script src="js/vista.js" defer></script>
+  <script src="js/avisos.js" defer></script>
   <script src="js/main.js" defer></script>
 </head>
 <body>
@@ -33,18 +34,36 @@
   <main class="tablero">
 
     <!-- ============================================================
+         RESCATADO DE LA SEMANA
+         Arranca con la clase "cargando": el refugio tarda unos
+         segundos en resolver a quién difunde, y mientras tanto el
+         resto de la pantalla funciona con normalidad.
+         ============================================================ -->
+    <section class="panel panel-ancho panel-destacado cargando" id="panel-destacado">
+      <h2>🌟 Rescatado de la semana</h2>
+      <div id="contenido-destacado" class="destacado-cuerpo">
+        <p class="destacado-espera">Consultando al refugio…</p>
+      </div>
+    </section>
+
+    <!-- ============================================================
          PANEL 1 · RESCATADOS DEL REFUGIO
          ============================================================ -->
     <section class="panel panel-ancho" id="panel-refugio">
       <h2><span class="numero">1</span> Rescatados del refugio</h2>
       <p class="ayuda">Estos son los perros que esperan hogar. Para adoptar o reservar
-        alguno, primero completa la solicitud del paso 2. Todo lo que hagas queda
-        guardado en tu navegador: si recargas la página, sigue estando.</p>
+        alguno, primero completa la solicitud del paso 2. Para apadrinar no hace falta
+        solicitud: alcanza con dejar tu nombre. Todo lo que hagas queda guardado en tu
+        navegador: si recargas la página, sigue estando.</p>
 
       <div class="barra-superior">
         <div class="campo campo-busqueda">
           <label for="input-buscar">Buscar por nombre</label>
           <input type="search" id="input-buscar" placeholder="Escribe un nombre… (Esc para limpiar)" autocomplete="off">
+        </div>
+        <div class="campo campo-padrino">
+          <label for="input-padrino">Apadrinar a nombre de</label>
+          <input type="text" id="input-padrino" placeholder="Tu nombre y apellido" autocomplete="off">
         </div>
         <div id="estadisticas" class="estadisticas"></div>
       </div>
@@ -178,7 +197,7 @@
 
   </main>
 
-  <footer class="pie">Pre-Entrega 8 · Curso de JavaScript · Coderhouse</footer>
+  <footer class="pie">Pre-Entrega 9 · Curso de JavaScript · Coderhouse</footer>
 
 </body>
 </html>
