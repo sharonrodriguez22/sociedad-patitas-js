@@ -1,5 +1,5 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 9
+   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 10
    vista.js · Todo lo que toca la pantalla
 
    Este archivo concentra el DOM: guarda las referencias a los nodos y
@@ -8,16 +8,16 @@
 
    Recibe los datos de datos.js y no decide nada de la lógica del
    refugio: solo la dibuja.
+
+   Desde esta entrega, el feedback usa dos librerías externas:
+   · SweetAlert2 → para decisiones que necesitan confirmación
+   · Toastify   → para notificaciones rápidas que no interrumpen
    ============================================================ */
 
 /* ------------------------------------------------------------
    1) SELECCIÓN DE ELEMENTOS DEL DOM
-   Se guardan en constantes una sola vez, al cargar la página, para
-   no volver a buscarlos en cada render.
    ------------------------------------------------------------ */
 
-
-// Referencias a los elementos fijos del HTML
 const zonaMensajes = document.getElementById("zona-mensajes");
 const contenedorRescatados = document.getElementById("contenedor-rescatados");
 const contenedorPreguntas = document.getElementById("contenedor-preguntas");
@@ -30,18 +30,15 @@ const panelDestacado = document.getElementById("panel-destacado");
 const contenidoDestacado = document.getElementById("contenido-destacado");
 const inputPadrino = document.getElementById("input-padrino");
 
-// Elementos que se ubican por clase
 const formSolicitud = document.querySelector("#form-solicitud");
 const formRescatado = document.querySelector("#form-rescatado");
 const botonLimpiar = document.querySelector("#btn-limpiar-solicitud");
 const inputBuscar = document.querySelector("#input-buscar");
 
-// Campos de la solicitud
 const inputNombre = document.querySelector("#input-nombre");
 const inputEdad = document.querySelector("#input-edad");
 const selectVivienda = document.querySelector("#select-vivienda");
 
-// Campos del alta de un rescatado
 const inputNombrePerro = document.querySelector("#input-nombre-perro");
 const selectSexo = document.querySelector("#select-sexo");
 const inputEdadPerro = document.querySelector("#input-edad-perro");
@@ -51,38 +48,81 @@ const inputCosto = document.querySelector("#input-costo");
 
 /* ------------------------------------------------------------
    2) ESTADO DE LA INTERFAZ
-   Datos que no viven en el array pero cambian con el uso. Los
-   escribe main.js y los lee el renderizado.
    ------------------------------------------------------------ */
-// La solicitud se levanta de sessionStorage: si la persona refresca
-// la página en medio del trámite, no pierde lo que ya había cargado.
 let solicitudActual = cargarSolicitud();
-let textoBusqueda = "";     // lo que se escribió en el buscador
-let idResaltado = null;     // tarjeta que se resalta en el próximo render
-let idPendienteBaja = null; // tarjeta que está esperando confirmación de salida
+let textoBusqueda = "";
+let idResaltado = null;
 
 
 /* ------------------------------------------------------------
-   3) FEEDBACK VISUAL
+   3) FEEDBACK CON LIBRERÍAS EXTERNAS
    ------------------------------------------------------------ */
 
-// Muestra un aviso en la franja superior. Se retira solo después de
-// unos segundos.
-function mostrarMensaje(texto, tipo) {
-  const aviso = document.createElement("p");
-  aviso.className = "aviso aviso-" + tipo;
-  aviso.textContent = texto;
+// Notificación rápida con Toastify: aparece en la esquina y se va
+// sola. Reemplaza el aviso sticky anterior para mensajes que no
+// necesitan acción del usuario.
+function notificar(texto, tipo) {
+  const colores = {
+    exito: "linear-gradient(to right, #1B7468, #229386)",
+    info: "linear-gradient(to right, #E09A1E, #F4B23E)",
+    error: "linear-gradient(to right, #b23b3b, #e06060)"
+  };
 
-  zonaMensajes.innerHTML = ""; // saco el mensaje anterior
-  zonaMensajes.appendChild(aviso);
-
-  setTimeout(function () {
-    aviso.remove();
-  }, DURACION_MENSAJE);
+  Toastify({
+    text: texto,
+    duration: DURACION_MENSAJE,
+    close: true,
+    gravity: "top",
+    position: "right",
+    style: {
+      background: colores[tipo] || colores.info,
+      borderRadius: "22px",
+      fontFamily: "'Nunito Sans', system-ui, sans-serif",
+      fontSize: "0.9rem",
+      fontWeight: "600",
+      boxShadow: "0 6px 18px rgba(43, 39, 36, 0.15)",
+      maxWidth: "420px"
+    }
+  }).showToast();
 }
 
-// Marca en rojo el campo mal completado y escribe el motivo justo
-// debajo, para que el error se lea sin depender de la franja de arriba.
+// Alerta con SweetAlert2: para mensajes importantes que el usuario
+// necesita leer antes de continuar.
+function alertar(titulo, texto, icono) {
+  return Swal.fire({
+    title: titulo,
+    text: texto,
+    icon: icono,
+    confirmButtonText: "Entendido",
+    confirmButtonColor: "#229386",
+    background: "#FBF8F1",
+    color: "#2B2724"
+  });
+}
+
+// Confirmación con SweetAlert2: reemplaza el patrón anterior de dos
+// clics. Devuelve una promesa que resuelve a true si el usuario
+// confirma.
+function confirmar(titulo, texto, textoConfirmar) {
+  return Swal.fire({
+    title: titulo,
+    text: texto,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: textoConfirmar || "Sí, confirmar",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: "#b23b3b",
+    cancelButtonColor: "#5E5852",
+    background: "#FBF8F1",
+    color: "#2B2724"
+  }).then((resultado) => resultado.isConfirmed);
+}
+
+
+/* ------------------------------------------------------------
+   4) ERRORES DE FORMULARIO
+   ------------------------------------------------------------ */
+
 function marcarError(campo, texto) {
   campo.classList.add("campo-error");
 
@@ -91,24 +131,19 @@ function marcarError(campo, texto) {
   aviso.textContent = texto;
   campo.parentElement.appendChild(aviso);
 
-  campo.focus(); // además lleva la pantalla hasta el campo
+  campo.focus();
 }
 
-// Borra las marcas y los textos de error de todo el formulario.
 function limpiarErrores() {
-  // Recorre todos los campos y textos de error del formulario
   document.querySelectorAll(".campo-error").forEach((campo) => campo.classList.remove("campo-error"));
   document.querySelectorAll(".error-campo").forEach((aviso) => aviso.remove());
 }
 
 
 /* ------------------------------------------------------------
-   4) RENDERIZADO
-   Cada función arma el HTML de su sección y lo vuelca en el
-   contenedor que le corresponde.
+   5) RENDERIZADO
    ------------------------------------------------------------ */
 
-// El cuestionario se arma a partir del array PREGUNTAS de config.js.
 function renderizarPreguntas() {
   contenedorPreguntas.innerHTML = PREGUNTAS
     .map((pregunta, indice) => `
@@ -120,112 +155,103 @@ function renderizarPreguntas() {
     .join("");
 }
 
-// True si el perro está reservado justamente por la persona que tiene
-// la solicitud abierta en este momento.
 function esSuPropiaReserva(rescatado) {
-  // Contempla el caso de que todavía no haya ninguna solicitud cargada.
   return rescatado.reservado && rescatado.reservadoPor === solicitudActual?.nombreAdoptante;
 }
 
-// Decide qué botón de acción va en cada tarjeta según el estado de
-// la solicitud actual y la situación del perro. Retorna el HTML.
 function plantillaBotonAccion(rescatado) {
   const esMiReserva = esSuPropiaReserva(rescatado);
 
-  // Reservado por otra persona: no hay nada que hacer con él
   if (rescatado.reservado && esMiReserva === false) {
-    return `<button class="boton boton-reservar" disabled>Reservado por ${rescatado.reservadoPor}</button>`;
+    return `<button class="btn btn--ghost" disabled>Reservado por ${rescatado.reservadoPor}</button>`;
   }
 
   if (solicitudActual === null) {
-    return `<button class="boton boton-adoptar" disabled title="Primero completa la solicitud">Adoptar</button>`;
+    return `<button class="btn btn--primary" disabled title="Primero completa la solicitud">Adoptar</button>`;
   }
 
   if (solicitudActual.fueAceptada() === false) {
-    return `<button class="boton boton-adoptar" disabled title="Tu solicitud fue rechazada">Adoptar</button>`;
+    return `<button class="btn btn--primary" disabled title="Tu solicitud fue rechazada">Adoptar</button>`;
   }
 
   if (rescatado.esCompatibleCon(solicitudActual.puntosVivienda) === false) {
-    return `<button class="boton boton-adoptar" disabled title="Necesita más espacio del que ofrece tu vivienda">Necesita más espacio</button>`;
+    return `<button class="btn btn--primary" disabled title="Necesita más espacio del que ofrece tu vivienda">Necesita más espacio</button>`;
   }
 
-  // Reservado a nombre de quien está usando el simulador. Solo puede
-  // llevárselo cuando su solicitud pasa de PREAPROBADA a APROBADA,
-  // que es lo que representa haber pasado la visita al domicilio.
   if (esMiReserva) {
     if (solicitudActual.estado === "APROBADA") {
-      return `<button class="boton boton-adoptar" data-accion="confirmar" data-id="${rescatado.id}" title="Tu solicitud quedó aprobada: ya puedes llevarlo">Confirmar mi reserva</button>`;
+      return `<button class="btn btn--primary" data-accion="confirmar" data-id="${rescatado.id}" title="Tu solicitud quedó aprobada: ya puedes llevarlo">Confirmar mi reserva</button>`;
     }
 
-    return `<button class="boton boton-reservar" disabled title="Falta la visita al domicilio para confirmar">Reservado a tu nombre</button>`;
+    return `<button class="btn btn--ghost" disabled title="Falta la visita al domicilio para confirmar">Reservado a tu nombre</button>`;
   }
 
   if (solicitudActual.estado === "APROBADA") {
-    return `<button class="boton boton-adoptar" data-accion="adoptar" data-id="${rescatado.id}">Adoptar</button>`;
+    return `<button class="btn btn--primary" data-accion="adoptar" data-id="${rescatado.id}">Adoptar</button>`;
   }
 
-  return `<button class="boton boton-reservar" data-accion="reservar" data-id="${rescatado.id}">Reservar</button>`;
+  return `<button class="btn btn--honey" data-accion="reservar" data-id="${rescatado.id}">Reservar</button>`;
 }
 
-// El botón para sacar al perro del refugio tiene tres estados:
-// bloqueado si otra persona lo reservó, esperando confirmación si ya
-// se hizo un primer clic, o listo para el primer clic.
+// SweetAlert2 se encarga de pedir confirmación, así que el botón ya
+// no necesita el patrón de dos clics.
 function plantillaBotonSalida(rescatado) {
   if (rescatado.reservado) {
-    return `<button class="boton boton-baja" disabled title="No se puede: lo reservó ${rescatado.reservadoPor}">Pasó a tránsito</button>`;
+    return `<button class="btn btn--transit" disabled title="No se puede: lo reservó ${rescatado.reservadoPor}">Pasó a tránsito</button>`;
   }
 
-  if (rescatado.id === idPendienteBaja) {
-    return `<button class="boton boton-baja boton-confirmar" data-accion="baja" data-id="${rescatado.id}" title="Vuelve a pulsar para confirmar">¿Confirmar?</button>`;
-  }
-
-  return `<button class="boton boton-baja" data-accion="baja" data-id="${rescatado.id}" title="Sale del listado porque va a un hogar de tránsito">Pasó a tránsito</button>`;
+  return `<button class="btn btn--transit" data-accion="baja" data-id="${rescatado.id}" title="Sale del listado porque va a un hogar de tránsito">Pasó a tránsito</button>`;
 }
 
-// El botón de padrinazgo. Un perro ya apadrinado muestra quién lo
-// apadrinó en lugar del botón.
 function plantillaBotonPadrinazgo(rescatado) {
   if (rescatado.apadrinado) {
-    return `<button class="boton boton-padrino" disabled title="Aporta ${enPesos(rescatado.cuotaPadrinazgo())} por mes">Apadrinado por ${rescatado.apadrinadoPor}</button>`;
+    return `<button class="btn btn--sponsor" disabled title="Aporta ${enPesos(rescatado.cuotaPadrinazgo())} por mes">Apadrinado por ${rescatado.apadrinadoPor}</button>`;
   }
 
-  return `<button class="boton boton-padrino" data-accion="apadrinar" data-id="${rescatado.id}" title="Aporta ${enPesos(rescatado.cuotaPadrinazgo())} por mes sin llevarlo a casa">Apadrinar</button>`;
+  return `<button class="btn btn--sponsor" data-accion="apadrinar" data-id="${rescatado.id}" title="Aporta ${enPesos(rescatado.cuotaPadrinazgo())} por mes sin llevarlo a casa">Apadrinar</button>`;
 }
 
-// La tarjeta de un rescatado.
+// Las tarjetas incluyen la foto del perro cuando está disponible.
+// Las imágenes vienen de la API Dog CEO y se cargan de forma asíncrona.
 function plantillaTarjeta(rescatado) {
-  // Los datos sueltos se toman del objeto; los métodos se siguen
-  // llamando sobre el rescatado.
-  const { id, nombre, sexo, tamanio, costoMensual, reservado, apadrinado } = rescatado;
+  const { id, nombre, sexo, tamanio, costoMensual, reservado, apadrinado, foto } = rescatado;
 
-  const claseReservada = reservado ? " tarjeta-reservada" : "";
-  const claseResaltada = id === idResaltado ? " tarjeta-nueva" : "";
-  const claseApadrinada = apadrinado ? " tarjeta-apadrinada" : "";
+  const claseReservada = reservado ? " tarjeta--reservada" : "";
+  const claseResaltada = id === idResaltado ? " tarjeta--nueva" : "";
+  const claseApadrinada = apadrinado ? " tarjeta--apadrinada" : "";
   const etiquetaCachorro = rescatado.esCachorro()
-    ? `<span class="etiqueta etiqueta-cachorro">cachorro</span>`
+    ? `<span class="tag tag--cachorro">cachorro</span>`
     : "";
   const etiquetaPadrino = apadrinado
-    ? `<span class="etiqueta etiqueta-padrino">con padrino</span>`
+    ? `<span class="tag tag--padrino">con padrino</span>`
     : "";
+
+  const imagenHTML = foto
+    ? `<div class="tarjeta__foto"><img src="${foto}" alt="Foto de ${nombre}" loading="lazy"></div>`
+    : `<div class="tarjeta__foto tarjeta__foto--placeholder">
+        <svg viewBox="0 0 200 160" aria-hidden="true"><ellipse cx="100" cy="100" rx="55" ry="50" fill="#fff"/><path d="M58 62c-9-15-5-30 5-30s16 16 10 30ZM142 62c9-15 5-30-5-30s-16 16-10 30Z" fill="#F4EEE2"/><circle cx="82" cy="92" r="6" fill="#2B2724"/><circle cx="118" cy="92" r="6" fill="#2B2724"/><ellipse cx="100" cy="110" rx="9" ry="6" fill="#2B2724"/></svg>
+      </div>`;
 
   return `
     <article class="tarjeta${claseReservada}${claseResaltada}${claseApadrinada}" data-id="${id}">
-      <div class="tarjeta-cabecera">
-        <h3>🐶 ${nombre}</h3>
-        <span class="etiqueta etiqueta-${rescatado.estadoTexto()}">${rescatado.estadoTexto()}</span>
-      </div>
-      <p class="tarjeta-datos">${sexo} · porte ${tamanio} · ${rescatado.textoEdad()} ${etiquetaCachorro} ${etiquetaPadrino}</p>
-      <p class="tarjeta-costo">Mantenimiento: ${enPesos(costoMensual)} por mes</p>
-      <div class="tarjeta-acciones">
-        ${plantillaBotonAccion(rescatado)}
-        ${plantillaBotonPadrinazgo(rescatado)}
-        ${plantillaBotonSalida(rescatado)}
+      ${imagenHTML}
+      <div class="tarjeta__body">
+        <div class="tarjeta__header">
+          <h3>${nombre}</h3>
+          <span class="tag tag--${rescatado.estadoTexto()}">${rescatado.estadoTexto()}</span>
+        </div>
+        <p class="tarjeta__meta">${sexo} · porte ${tamanio} · ${rescatado.textoEdad()} ${etiquetaCachorro} ${etiquetaPadrino}</p>
+        <p class="tarjeta__cost">Mantenimiento: ${enPesos(costoMensual)} por mes</p>
+        <div class="tarjeta__actions">
+          ${plantillaBotonAccion(rescatado)}
+          ${plantillaBotonPadrinazgo(rescatado)}
+          ${plantillaBotonSalida(rescatado)}
+        </div>
       </div>
     </article>
   `;
 }
 
-// Vuelca en pantalla las tarjetas de todos los rescatados.
 function renderizarRescatados() {
   const visibles = obtenerListaVisible();
 
@@ -237,12 +263,9 @@ function renderizarRescatados() {
   }
 
   contenedorRescatados.innerHTML = visibles.map(plantillaTarjeta).join("");
-
-  // El resaltado dura un solo render
   idResaltado = null;
 }
 
-// Los números que se muestran en la barra superior del refugio.
 function renderizarEstadisticas() {
   const datos = calcularEstadisticas(rescatados);
   const visibles = obtenerListaVisible().length;
@@ -251,44 +274,42 @@ function renderizarEstadisticas() {
 
   if (textoBusqueda.trim() !== "") {
     filtro = `
-      <div class="dato">
-        <span class="dato-valor">${visibles}</span>
-        <span class="dato-titulo">en pantalla</span>
+      <div class="stat">
+        <span class="stat__num">${visibles}</span>
+        <span class="stat__label">en pantalla</span>
       </div>
     `;
   }
 
   contenedorEstadisticas.innerHTML = `
     ${filtro}
-    <div class="dato">
-      <span class="dato-valor">${datos.total}</span>
-      <span class="dato-titulo">en el refugio</span>
+    <div class="stat">
+      <span class="stat__num">${datos.total}</span>
+      <span class="stat__label">en el refugio</span>
     </div>
-    <div class="dato">
-      <span class="dato-valor">${datos.disponibles}</span>
-      <span class="dato-titulo">disponibles</span>
+    <div class="stat">
+      <span class="stat__num">${datos.disponibles}</span>
+      <span class="stat__label">disponibles</span>
     </div>
-    <div class="dato">
-      <span class="dato-valor">${datos.reservados}</span>
-      <span class="dato-titulo">reservados</span>
+    <div class="stat">
+      <span class="stat__num">${datos.reservados}</span>
+      <span class="stat__label">reservados</span>
     </div>
-    <div class="dato">
-      <span class="dato-valor">${contarAdopciones(salidas)}</span>
-      <span class="dato-titulo">adoptados</span>
+    <div class="stat">
+      <span class="stat__num">${contarAdopciones(salidas)}</span>
+      <span class="stat__label">adoptados</span>
     </div>
-    <div class="dato">
-      <span class="dato-valor">${contarApadrinados(rescatados)}</span>
-      <span class="dato-titulo">apadrinados</span>
+    <div class="stat">
+      <span class="stat__num">${contarApadrinados(rescatados)}</span>
+      <span class="stat__label">apadrinados</span>
     </div>
-    <div class="dato">
-      <span class="dato-valor">${enPesos(datos.costo)}</span>
-      <span class="dato-titulo">gasto mensual</span>
+    <div class="stat">
+      <span class="stat__num">${enPesos(datos.costo)}</span>
+      <span class="stat__label">gasto mensual</span>
     </div>
   `;
 }
 
-// El registro de salidas. Mientras no haya ninguna, el panel entero
-// queda oculto con la clase "oculto".
 function renderizarSalidas() {
   if (salidas.length === 0) {
     panelSalidas.classList.add("oculto");
@@ -298,31 +319,27 @@ function renderizarSalidas() {
 
   panelSalidas.classList.remove("oculto");
 
-  // Se trabaja sobre una copia para mostrar las salidas más recientes
-  // primero, sin alterar el orden cronológico en el que se guardan.
   contenedorSalidas.innerHTML = [...salidas]
     .reverse()
     .map(({ rescatado, motivo, destino }) => {
       const esAdopcion = motivo === MOTIVO_ADOPCION;
       const icono = esAdopcion ? "🎉" : "🏠";
-      const clase = esAdopcion ? "salida-adopcion" : "salida-transito";
+      const clase = esAdopcion ? "salida--adopcion" : "salida--transito";
       const detalle = esAdopcion
         ? `adoptad${rescatado.sexo === "hembra" ? "a" : "o"} por <strong>${destino}</strong>`
         : `pasó a ${destino}`;
 
       return `
         <li class="salida ${clase}">
-          <span class="salida-icono">${icono}</span>
-          <span class="salida-texto"><strong>${rescatado.nombre}</strong> · ${detalle}</span>
+          <span class="salida__icon">${icono}</span>
+          <span class="salida__text"><strong>${rescatado.nombre}</strong> · ${detalle}</span>
         </li>
       `;
     })
     .join("");
 }
 
-// Dibuja el resultado de la solicitud debajo del formulario.
 function renderizarResultado(solicitud) {
-  // Datos de la solicitud que se van a mostrar
   const { nombreAdoptante, tipoVivienda, puntaje, puntosVivienda, estado } = solicitud;
 
   const porcentaje = Math.round((puntaje / PUNTAJE_MAXIMO) * 100);
@@ -334,22 +351,22 @@ function renderizarResultado(solicitud) {
   let detalle = "";
 
   if (estado === "APROBADA") {
-    titulo = "✅ Solicitud APROBADA";
+    titulo = "Solicitud APROBADA";
     detalle = `Ya puedes elegir a tu compañero. Tienes ${compatibles.length} perro(s) compatibles con ${tipoVivienda}.`;
   } else if (estado === "PREAPROBADA") {
-    titulo = "🟡 Solicitud PREAPROBADA";
+    titulo = "Solicitud PREAPROBADA";
     detalle = `Puedes <strong>reservar</strong> uno de los ${compatibles.length} perro(s) compatibles, pero todavía no llevarlo: primero coordinamos la visita al domicilio.`;
   } else {
     const faltaron = PUNTAJE_SEGUIMIENTO - puntaje;
-    titulo = "⛔ Solicitud RECHAZADA por ahora";
+    titulo = "Solicitud RECHAZADA por ahora";
     detalle = `Te faltaron ${faltaron} punto(s) para el mínimo. ¿Te sumas como hogar de tránsito?`;
   }
 
-  cajaResultado.className = "resultado resultado-" + estado.toLowerCase();
+  cajaResultado.className = "resultado resultado--" + estado.toLowerCase();
   cajaResultado.innerHTML = `
     <h3>${titulo}</h3>
     <p><strong>${nombreAdoptante}</strong> · ${tipoVivienda}</p>
-    <div class="barra"><div class="barra-relleno" style="width: ${porcentaje}%"></div></div>
+    <div class="barra"><div class="barra__fill" style="width: ${porcentaje}%"></div></div>
     <p>Puntaje: ${puntaje} de ${PUNTAJE_MAXIMO}</p>
     <p>${detalle}</p>
     <p>${obtenerRecomendacion(puntosVivienda)}</p>
@@ -358,32 +375,27 @@ function renderizarResultado(solicitud) {
 
 /* ------------------------------------------------------------
    RESCATADO DE LA SEMANA
-   El panel arranca con la clase "cargando" desde el HTML y se la
-   saca avisos.js cuando la consulta termina, salga bien o mal.
    ------------------------------------------------------------ */
 
-// El rescatado de la semana, con su cuota de padrinazgo.
 function renderizarDestacado(rescatado, esperando, cuota) {
   contenidoDestacado.innerHTML = `
-    <p class="destacado-nombre">🌟 ${rescatado.nombre}</p>
-    <p class="destacado-datos">${rescatado.sexo} · porte ${rescatado.tamanio} · ${rescatado.textoEdad()}</p>
-    <p class="destacado-cuota">Apadrinarlo cuesta <strong>${enPesos(cuota)} por mes</strong>,
+    <p class="destacado__name">${rescatado.nombre}</p>
+    <p class="destacado__data">${rescatado.sexo} · porte ${rescatado.tamanio} · ${rescatado.textoEdad()}</p>
+    <p class="destacado__fee">Apadrinarlo cuesta <strong>${enPesos(cuota)} por mes</strong>,
       la mitad de lo que sale mantenerlo.</p>
-    <p class="destacado-espera">Hay ${esperando} ${esperando === 1 ? "perro esperando" : "perros esperando"} hogar en este momento.</p>
+    <p class="destacado__wait">Hay ${esperando} ${esperando === 1 ? "perro esperando" : "perros esperando"} hogar en este momento.</p>
   `;
 }
 
-// Qué mostrar cuando el refugio no tiene ningún perro para destacar.
 function renderizarDestacadoVacio(motivo) {
   contenidoDestacado.innerHTML = `
-    <p class="destacado-nombre">Sin destacado esta semana</p>
-    <p class="destacado-datos">No se pudo elegir un rescatado: ${motivo}.</p>
-    <p class="destacado-espera">Registra un ingreso en el paso 3 o reinicia el refugio
+    <p class="destacado__name">Sin destacado esta semana</p>
+    <p class="destacado__data">No se pudo elegir un rescatado: ${motivo}.</p>
+    <p class="destacado__wait">Registra un ingreso en el paso 3 o reinicia el refugio
       para volver a verlo.</p>
   `;
 }
 
-// Vuelve a dibujar todo lo que depende del array.
 function actualizarVista() {
   renderizarRescatados();
   renderizarEstadisticas();

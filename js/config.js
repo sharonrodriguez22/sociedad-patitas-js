@@ -1,5 +1,5 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 9
+   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 10
    config.js · Constantes de configuración
 
    Los valores fijos del refugio, todos juntos en un solo lugar.

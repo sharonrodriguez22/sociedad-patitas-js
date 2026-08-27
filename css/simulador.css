@@ -1,0 +1,704 @@
+/* ============================================================
+   SOCIEDAD PATITAS · Simulador de adopción
+   Pre-Entrega 10 · Estilos integrados al sitio web
+
+   Usa los mismos tokens de diseño que style.css:
+   · Colores: #229386 (teal), #1B7468 (dark teal), #F4B23E (honey),
+     #2B2724 (dark), #5E5852 (gray), #FBF8F1 (cream), #E4F4F0 (light teal),
+     #CDEAE3 (border teal), #F4EEE2 (warm light)
+   · Tipografía: Fredoka (títulos), Nunito Sans (cuerpo)
+   · Radio: 22px (tarjetas), 999px (pills), 14px (elementos pequeños)
+   ============================================================ */
+
+
+/* ================================================================
+   LAYOUT DEL SIMULADOR
+   ================================================================ */
+
+.simulador {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.4rem;
+  align-items: start;
+  padding-bottom: 2rem;
+}
+
+@media (max-width: 900px) {
+  .simulador {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ================================================================
+   PANELES
+   ================================================================ */
+
+.sim-panel {
+  background: #FFFFFF;
+  border: 1px solid rgba(34, 147, 134, 0.08);
+  border-radius: 22px;
+  box-shadow: 0 6px 18px rgba(43, 39, 36, 0.06);
+  padding: 1.6rem 1.8rem;
+}
+
+.sim-panel--wide {
+  grid-column: 1 / -1;
+}
+
+.sim-panel--featured {
+  background: linear-gradient(135deg, #E4F4F0, #FBF8F1);
+  border-color: #229386;
+}
+
+.sim-panel--featured.cargando .destacado__body {
+  opacity: 0.5;
+  animation: sim-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes sim-pulse {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.75; }
+}
+
+.sim-panel--exits {
+  border-color: #229386;
+  animation: sim-appear 0.3s ease-out;
+}
+
+.sim-panel--exits h2 {
+  color: #1B7468;
+}
+
+.sim-panel h2 {
+  font-family: "Fredoka", system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.3rem;
+  color: #2B2724;
+  margin: 0 0 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.sim-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #229386;
+  color: #FFFFFF;
+  font-family: "Fredoka", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.88rem;
+  flex-shrink: 0;
+}
+
+.sim-help {
+  margin: 0 0 1.2rem;
+  color: #5E5852;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+
+/* ================================================================
+   TOOLBAR (buscar + apadrinar + estadísticas)
+   ================================================================ */
+
+.sim-toolbar {
+  display: flex;
+  gap: 1.1rem;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 1.2rem;
+}
+
+
+/* ================================================================
+   CAMPOS DE FORMULARIO
+   ================================================================ */
+
+.sim-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.sim-field label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #5E5852;
+  letter-spacing: 0.02em;
+}
+
+.sim-field--search {
+  flex: 1 1 260px;
+}
+
+.sim-field--sponsor {
+  min-width: 200px;
+}
+
+.sim-field input[type="text"],
+.sim-field input[type="number"],
+.sim-field input[type="search"],
+.sim-field select {
+  font-family: "Nunito Sans", system-ui, sans-serif;
+  font-size: 0.95rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid #CDEAE3;
+  border-radius: 14px;
+  background: #FFFFFF;
+  color: #2B2724;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sim-field input:focus,
+.sim-field select:focus {
+  outline: none;
+  border-color: #229386;
+  box-shadow: 0 0 0 3px rgba(34, 147, 134, 0.15);
+}
+
+.sim-row {
+  display: flex;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.sim-row > .sim-field {
+  flex: 1 1 140px;
+}
+
+.sim-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.sim-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding-top: 0.4rem;
+}
+
+
+/* ================================================================
+   ESTADÍSTICAS
+   ================================================================ */
+
+.sim-stats {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.stat {
+  background: #E4F4F0;
+  border: 1px solid #CDEAE3;
+  border-radius: 14px;
+  padding: 0.5rem 0.9rem;
+  text-align: center;
+  min-width: 88px;
+}
+
+.stat__num {
+  display: block;
+  font-family: "Fredoka", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: #1B7468;
+  line-height: 1.2;
+}
+
+.stat__label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #5E5852;
+}
+
+
+/* ================================================================
+   GRILLA DE TARJETAS
+   ================================================================ */
+
+.sim-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.2rem;
+}
+
+
+/* ================================================================
+   TARJETA DE RESCATADO
+   ================================================================ */
+
+.tarjeta {
+  background: #FFFFFF;
+  border: 1px solid rgba(34, 147, 134, 0.08);
+  border-radius: 22px;
+  box-shadow: 0 6px 18px rgba(43, 39, 36, 0.06);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1),
+              box-shadow 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.tarjeta:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 48px rgba(27, 116, 104, 0.15);
+}
+
+/* Foto del perro (API Dog CEO) */
+.tarjeta__foto {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: linear-gradient(160deg, #E4F4F0, #CDEAE3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tarjeta__foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.tarjeta__foto--placeholder svg {
+  width: 58%;
+  transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.tarjeta:hover .tarjeta__foto--placeholder svg {
+  transform: scale(1.07) rotate(2deg);
+}
+
+/* Cuerpo de la tarjeta */
+.tarjeta__body {
+  padding: 1.1rem 1.3rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1;
+}
+
+.tarjeta__body h3 {
+  margin: 0;
+  font-family: "Fredoka", system-ui, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #2B2724;
+}
+
+.tarjeta__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tarjeta__meta {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #5E5852;
+  line-height: 1.5;
+}
+
+.tarjeta__cost {
+  margin: 0;
+  font-size: 0.86rem;
+  color: #5E5852;
+}
+
+.tarjeta__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 0.6rem;
+}
+
+.tarjeta__actions .btn {
+  font-size: 0.85rem;
+  padding: 0.55rem 1rem;
+  flex: 1 1 auto;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.tarjeta__actions .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Estado: reservado */
+.tarjeta--reservada {
+  border-color: #E09A1E;
+  background: #FFFCF3;
+}
+
+/* Estado: recién agregado */
+.tarjeta--nueva {
+  animation: sim-highlight 1.6s ease-out;
+}
+
+@keyframes sim-highlight {
+  0%   { box-shadow: 0 0 0 4px #F4B23E; transform: scale(1.02); }
+  100% { box-shadow: 0 0 0 0 transparent; transform: scale(1); }
+}
+
+/* Estado: apadrinado */
+.tarjeta--apadrinada {
+  border-left: 4px solid #F4B23E;
+}
+
+
+/* ================================================================
+   ETIQUETAS (tags)
+   ================================================================ */
+
+.tag {
+  font-family: "Nunito Sans", system-ui, sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.tag--disponible {
+  background: #E4F4F0;
+  color: #1B7468;
+}
+
+.tag--reservado {
+  background: #FFFFFF;
+  color: #E09A1E;
+  border: 1px solid #E09A1E;
+}
+
+.tag--cachorro {
+  background: #FCEFCF;
+  color: #2B2724;
+}
+
+.tag--padrino {
+  background: #FCEFCF;
+  color: #E09A1E;
+}
+
+
+/* ================================================================
+   BOTONES EXTRA (transit y sponsor)
+   Los demás (--primary, --honey, --ghost) vienen de style.css
+   ================================================================ */
+
+.btn--transit {
+  background: #FFFFFF;
+  color: #b23b3b;
+  border-color: rgba(178, 59, 59, 0.2);
+}
+
+.btn--transit:hover:not(:disabled) {
+  background: #b23b3b;
+  color: #FFFFFF;
+  border-color: #b23b3b;
+  transform: translateY(-3px);
+}
+
+.btn--sponsor {
+  background: #FCEFCF;
+  border-color: #F4B23E;
+  color: #E09A1E;
+}
+
+.btn--sponsor:hover:not(:disabled) {
+  background: #F4B23E;
+  color: #2B2724;
+  transform: translateY(-3px);
+}
+
+
+/* ================================================================
+   CUESTIONARIO Y PREGUNTAS
+   ================================================================ */
+
+.cuestionario {
+  border: 1px solid #CDEAE3;
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+  margin: 0;
+}
+
+.cuestionario legend {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #5E5852;
+  padding: 0 0.4rem;
+}
+
+.pregunta {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  padding: 0.45rem 0;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: #2B2724;
+  transition: color 0.15s ease;
+}
+
+.pregunta:hover {
+  color: #1B7468;
+}
+
+.check-pregunta {
+  margin-top: 0.25rem;
+  accent-color: #229386;
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+
+/* ================================================================
+   ERRORES DE FORMULARIO
+   ================================================================ */
+
+.campo-error {
+  border-color: #b23b3b !important;
+  background-color: #fef0f0 !important;
+}
+
+.error-campo {
+  color: #b23b3b;
+  font-size: 0.8rem;
+  font-weight: 600;
+  animation: sim-appear 0.2s ease-out;
+}
+
+
+/* ================================================================
+   RESULTADO DE LA SOLICITUD
+   ================================================================ */
+
+.resultado:empty {
+  display: none;
+}
+
+.resultado {
+  margin-top: 1.2rem;
+  padding: 1.2rem 1.4rem;
+  border-radius: 22px;
+  border: 1px solid #CDEAE3;
+  animation: sim-appear 0.25s ease-out;
+}
+
+.resultado h3 {
+  margin: 0 0 0.4rem;
+  font-family: "Fredoka", system-ui, sans-serif;
+  font-size: 1.1rem;
+}
+
+.resultado p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+}
+
+.resultado--aprobada {
+  background: #E4F4F0;
+  border-color: #229386;
+}
+
+.resultado--aprobada h3 {
+  color: #1B7468;
+}
+
+.resultado--preaprobada {
+  background: #FCEFCF;
+  border-color: #E09A1E;
+}
+
+.resultado--preaprobada h3 {
+  color: #E09A1E;
+}
+
+.resultado--rechazada {
+  background: #fef0f0;
+  border-color: #b23b3b;
+}
+
+.resultado--rechazada h3 {
+  color: #b23b3b;
+}
+
+/* Barra de puntaje */
+.barra {
+  height: 10px;
+  background: #FFFFFF;
+  border: 1px solid #CDEAE3;
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 0.6rem 0 0.3rem;
+}
+
+.barra__fill {
+  height: 100%;
+  background: linear-gradient(to right, #229386, #1B7468);
+  border-radius: 999px;
+  transition: width 0.4s ease-out;
+}
+
+
+/* ================================================================
+   RESCATADO DE LA SEMANA (destacado)
+   ================================================================ */
+
+.destacado__body {
+  transition: opacity 0.3s ease;
+}
+
+.destacado__name {
+  margin: 0 0 0.25rem;
+  font-family: "Fredoka", system-ui, sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #2B2724;
+}
+
+.destacado__data {
+  margin: 0 0 0.5rem;
+  color: #5E5852;
+  text-transform: capitalize;
+}
+
+.destacado__fee {
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
+}
+
+.destacado__wait {
+  margin: 0;
+  font-size: 0.92rem;
+  color: #5E5852;
+}
+
+
+/* ================================================================
+   REGISTRO DE SALIDAS
+   ================================================================ */
+
+.registro {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.salida {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem;
+  border-radius: 14px;
+  border-left: 4px solid #CDEAE3;
+  background: #FBF8F1;
+  font-size: 0.92rem;
+  animation: sim-appear 0.25s ease-out;
+}
+
+.salida--adopcion {
+  border-left-color: #229386;
+  background: #E4F4F0;
+}
+
+.salida--transito {
+  border-left-color: #F4B23E;
+  background: #FCEFCF;
+}
+
+.salida__icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.salida__text {
+  line-height: 1.4;
+}
+
+
+/* ================================================================
+   ZONA DE MENSAJES (sticky)
+   ================================================================ */
+
+.zona-mensajes {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  min-height: 0;
+  padding-top: 0.4rem;
+  pointer-events: none;
+}
+
+
+/* ================================================================
+   PIE DEL PANEL DEL REFUGIO
+   ================================================================ */
+
+.sim-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #CDEAE3;
+}
+
+
+/* ================================================================
+   VACÍO Y OCULTO
+   ================================================================ */
+
+.vacio {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2rem;
+  color: #5E5852;
+  border: 2px dashed #CDEAE3;
+  border-radius: 22px;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.oculto {
+  display: none;
+}
+
+
+/* ================================================================
+   ANIMACIONES
+   ================================================================ */
+
+@keyframes sim-appear {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

@@ -1,0 +1,34 @@
+// Colores
+$teal:        #229386;
+$teal-dark:   #1B7468;
+$teal-light:  #E4F4F0;
+$teal-pale:   #CDEAE3;
+$honey:       #F4B23E;
+$honey-dark:  #E09A1E;
+$coral:       #FF8A6B;
+$dark:        #2B2724;
+$mid:         #5E5852;
+$warm:        #9C948A;
+$bg:          #FBF8F1;
+$bg-alt:      #F4EEE2;
+$white:       #FFFFFF;
+
+// Tipografías
+$ff-display: 'Fredoka', system-ui, sans-serif;
+$ff-body:    'Nunito Sans', system-ui, sans-serif;
+
+// Radios
+$r-sm:   14px;
+$r-md:   22px;
+$r-lg:   34px;
+$r-full: 999px;
+
+// Sombras
+$shadow-sm: 0 6px 18px rgba($dark, .06);
+$shadow-md: 0 10px 22px rgba($teal, .32);
+$shadow-lg: 0 26px 60px rgba($teal-dark, .20);
+
+// Transición
+$ease: cubic-bezier(.22, .61, .36, 1);
+$t:    .25s $ease;
+$t-md: .3s  $ease;

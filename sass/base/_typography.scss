@@ -1,0 +1,36 @@
+h1, h2, h3, h4 {
+  font-family: $ff-display;
+  font-weight: 600;
+  line-height: 1.12;
+  color: $dark;
+}
+
+h1 { font-size: clamp(2.4rem, 5.2vw, 3.8rem); }
+h2 { font-size: clamp(1.8rem, 3.8vw, 2.6rem); }
+h3 { font-size: 1.22rem; }
+p  { color: $dark; }
+
+.lead   { font-size:1.15rem; color:$mid; }
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  font-family: $ff-body;
+  font-weight: 700;
+  font-size: .82rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: $teal-dark;
+  background: $teal-light;
+  padding: .5rem 1rem;
+  border-radius: $r-full;
+}
+
+// Animación fade-up (scroll reveal)
+.fade-up {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .5s $ease, transform .5s $ease;
+  &.visible { opacity:1; transform:translateY(0); }
+}
