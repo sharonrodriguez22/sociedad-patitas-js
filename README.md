@@ -1,537 +1,219 @@
-# 🐾 Sociedad Patitas — Pre-Entrega 9
-
-Simulador de solicitud de adopción de **Sociedad Patitas**.
-Curso de JavaScript · Carrera de Desarrollo de Aplicaciones · Coderhouse.
-
-## Estructura
-
-Siguiendo la recomendación de las devoluciones anteriores, el JavaScript ya
-no vive en un solo archivo: cada pieza está en el suyo, con una
-responsabilidad clara.
-
-```
-sociedad-patitas-js/
-├── index.html            # único archivo en la raíz
-├── css/
-│   └── styles.css        # estilos del simulador
-├── js/
-│   ├── config.js           # constantes y claves del storage
-│   ├── clases/
-│   │   ├── Rescatado.js    # la clase Rescatado
-│   │   └── Solicitud.js    # la clase Solicitud
-│   ├── almacenamiento.js   # la memoria del navegador
-│   ├── utilidades.js       # funciones auxiliares puras
-│   ├── datos.js          # el array de objetos y sus consultas
-│   ├── avisos.js           # rescatado de la semana (asincronismo)
-│   ├── vista.js          # todo lo que toca el DOM
-│   └── main.js           # eventos y arranque
-└── README.md
-```
-
-| Archivo | De qué se ocupa | Qué NO hace |
-|---|---|---|
-| `config.js` | Los valores fijos: puntajes, preguntas, porte → espacio, claves del storage | No tiene lógica |
-| `almacenamiento.js` | Hablar con `localStorage` y `sessionStorage` | No sabe qué guarda |
-| `clases/Rescatado.js` | Modela a cada perro: sus datos y sus métodos | No sabe que existe una pantalla |
-| `clases/Solicitud.js` | Modela la postulación y se autoevalúa | No sabe que existe una pantalla |
-| `utilidades.js` | Funciones cortas y puras (`enPesos`, `clasificarSolicitud`…) | No toca el array ni el DOM |
-| `datos.js` | Crea las instancias, guarda el array y lo consulta con `find`, `filter`, `reduce` | No toca el DOM |
-| `vista.js` | Selecciona los nodos, arma el HTML y lo inyecta | No decide reglas del refugio |
-| `main.js` | Escucha los eventos y coordina al resto | No arma HTML ni recorre el array |
-
-Vinculación en el `<head>` del HTML:
-
-```html
-<link rel="stylesheet" href="css/styles.css">
-
-<script src="js/config.js" defer></script>
-<script src="js/clases/Rescatado.js" defer></script>
-<script src="js/clases/Solicitud.js" defer></script>
-<script src="js/almacenamiento.js" defer></script>
-<script src="js/utilidades.js" defer></script>
-<script src="js/datos.js" defer></script>
-<script src="js/vista.js" defer></script>
-<script src="js/main.js" defer></script>
-```
-
-`defer` hace dos cosas: los scripts se descargan en paralelo sin frenar el
-dibujado de la página, y se ejecutan recién cuando el HTML terminó de
-leerse, **respetando el orden en que están escritos**. Sin `defer`,
-`document.getElementById` no encontraría nada porque el navegador todavía
-no habría creado los elementos.
-
-**El orden importa.** `datos.js` ejecuta `new Rescatado(...)` en el momento
-de cargarse, así que las clases tienen que estar definidas antes. Lo mismo
-con `config.js`, del que dependen todos los demás.
-
-### Por qué scripts clásicos y no módulos ES
-
-La alternativa sería usar `type="module"` con `import` y `export`. No se usó
-por un motivo concreto: los módulos ES no funcionan al abrir el archivo con
-doble clic (protocolo `file://`), porque el navegador los bloquea por
-seguridad. Necesitan sí o sí un servidor, aunque sea Live Server. Con
-scripts clásicos el proyecto abre de las dos maneras, y la separación de
-responsabilidades se consigue igual.
-
-## Qué cambia en esta entrega
-
-Esta entrega suma el asincronismo del módulo 9 y una función nueva del
-refugio: el padrinazgo.
-
-### El rescatado de la semana
-
-El refugio elige cada semana un perro para difundir y buscarle padrino o
-madrina. Esa consulta no es inmediata: el panel arranca con la clase
-`cargando` y se completa unos segundos después, sin frenar el resto de la
-pantalla. Mientras el temporizador corre se puede buscar, cargar la
-solicitud o registrar un ingreso con total normalidad.
-
-Vive en `js/avisos.js` y son dos piezas:
-
-**`obtenerDestacadoDeLaSemana()`** devuelve una promesa. El `setTimeout`
-marca la demora; cuando se cumple, resuelve con el perro de mayor costo de mantenimiento
-mensual, que es el que más necesita un padrino. Si no queda ninguno
-disponible, la promesa se rechaza.
-
-**`cargarDestacadoDeLaSemana()`** consume esa promesa con `async/await`
-dentro de un `try/catch/finally`:
-
-| Bloque | Qué hace |
-|---|---|
-| `try` | Espera la consulta y dibuja el panel con el destacado |
-| `catch` | Si no hubo destacado, deja el panel explicando el motivo |
-| `finally` | Saca el estado de carga, haya salido bien o mal |
+# Sociedad Patitas · Pre-Entrega 10
 
-En el arranque se llama **sin `await`**: la carga queda en curso y el
-simulador sigue respondiendo mientras tanto.
-
-Para ver el `catch` en acción alcanza con vaciar el refugio: se adoptan o
-se mandan a tránsito todos los perros y se recarga la página. Como el
-estado queda guardado en `localStorage`, el refugio abre sin candidatos y
-la promesa se rechaza.
-
-### El padrinazgo
-
-Apadrinar es un punto intermedio entre mirar y adoptar: la persona cubre
-la mitad del gasto mensual del perro, que **sigue en el refugio**
-esperando hogar. No hace falta solicitud aprobada, alcanza con dejar el
-nombre en la barra del refugio.
-
-El segundo `try/catch/finally` está acá, en `apadrinarRescatado()` de
-`main.js`, sobre un fragmento con tres desenlaces posibles:
-
-- el nombre llega vacío o demasiado corto
-- el perro ya tiene padrino, y `apadrinar()` devuelve `false`
-- todo sale bien y el padrinazgo se registra
-
-Los dos primeros lanzan un error que el `catch` convierte en un aviso
-visible junto al campo. El `finally` vuelve a dibujar la pantalla en
-cualquiera de los tres casos.
-
-## La persistencia
-
-### Qué se guarda y dónde
-
-| Dato | Almacén | Por qué |
-|---|---|---|
-| `rescatados` | `localStorage` | Son los perros del refugio: tienen que seguir ahí mañana |
-| `salidas` | `localStorage` | El registro histórico no se pierde nunca |
-| La solicitud en curso | `sessionStorage` | Es un trámite de esta visita: sobrevive al F5, se borra al cerrar la pestaña |
-
-Las claves llevan el prefijo `patitas.` para no chocar con lo que puedan
-guardar otras páginas del mismo dominio. Por el mismo motivo el reinicio
-borra clave por clave con `removeItem()` y no con `localStorage.clear()`,
-que borraría también lo ajeno.
-
-### El problema de los objetos: la rehidratación
-
-Este fue el punto más delicado de la entrega. El Web Storage solo guarda
-texto, así que todo pasa por `JSON.stringify` al salir y por `JSON.parse`
-al volver. Pero `JSON.parse` devuelve **objetos comunes, sin métodos**: un
-perro recuperado sabría su nombre, pero no sabría responder
-`esCompatibleCon()` ni `adoptar()`, y el simulador se rompería al primer
-clic.
-
-La solución es no usar lo que vuelve del storage tal cual, sino tratarlo
-como una receta para construir de nuevo la instancia con `new`. A eso se le
-llama **rehidratar**:
-
-```js
-function rehidratarRescatado(datos) {
-  const { id, nombre, sexo, edad, tamanio, costoMensual,
-          reservado, reservadoPor, adoptado, adoptadoPor } = datos;
-
-  const rescatado = new Rescatado(id, nombre, sexo, edad, tamanio, costoMensual);
-
-  // El constructor siempre crea al perro disponible: hay que
-  // devolverle el estado que tenía guardado.
-  rescatado.reservado = reservado;
-  rescatado.reservadoPor = reservadoPor;
-  rescatado.adoptado = adoptado;
-  rescatado.adoptadoPor = adoptadoPor;
-
-  return rescatado;
-}
-```
-
-### El ciclo completo
-
-Cada acción del usuario sigue siempre los mismos tres pasos:
-
-1. **Se actualiza el array** en memoria (`push`, `splice`, o un cambio de estado).
-2. **Se guarda** con `persistirEstado()`, que hace el `JSON.stringify`.
-3. **Se vuelve a renderizar** con `actualizarVista()`.
-
-```js
-rescatados.push(nuevo);
-persistirEstado();
-actualizarVista();
-```
-
-## Operadores modernos
-
-| Operador | Dónde se usa | Qué resuelve |
-|---|---|---|
-| `?.` | `guardados?.map(...)`, `solicitudActual?.nombreAdoptante`, `elegida?.index` | Leer sin romperse cuando el valor puede no existir |
-| `??` | `... ?? crearRescatadosIniciales()`, `... ?? []`, `... ?? 0` | Un valor por defecto cuando no hay nada guardado |
-| `? :` | El botón de cada tarjeta, el ícono del registro, el mensaje de bienvenida | Reemplaza `if/else` cortos |
-| `&&` | `solicitudActual && renderizarResultado(solicitudActual)` | Ejecutar solo si hay algo que dibujar |
-| `...` | `push(...crearRescatadosIniciales())`, `[...salidas].reverse()` | Desparramar un array y copiarlo antes de invertirlo |
+## Contexto del proyecto
 
-La línea que junta tres de ellos:
-
-```js
-function cargarRescatados() {
-  const guardados = leerLocal(CLAVE_RESCATADOS);
-  return guardados?.map(rehidratarRescatado) ?? crearRescatadosIniciales();
-}
-```
-
-Si no hay nada guardado, `leerLocal` devuelve `null`, el `?.` corta la
-cadena sin lanzar error y el `??` entrega la lista inicial.
-
-> **Por qué `??` y no `||`.** El material muestra el patrón
-> `JSON.parse(localStorage.getItem("carrito")) || []`. Funciona, pero `||`
-> también reemplaza valores válidos como `0`, `""` o `false`. `??` solo
-> actúa cuando el valor es `null` o `undefined`, que es exactamente el caso
-> de "no hay nada guardado".
-
-## Destructuring
-
-| Dónde | Qué se saca |
-|---|---|
-| `rehidratarRescatado(datos)` | Las diez propiedades del perro guardado |
-| `rehidratarSolicitud(datos)` | Los seis datos de la solicitud |
-| `cargarSalidas()` | `({ rescatado, motivo, destino })` en el parámetro del `map` |
-| `plantillaTarjeta(rescatado)` | Los datos sueltos de la tarjeta |
-| `renderizarResultado(solicitud)` | Nombre, vivienda, puntaje y estado |
-| `repoblarFormularioSolicitud({ nombreAdoptante, edad, tipoVivienda })` | Desestructurado directo en el parámetro |
-
-Un detalle: en `plantillaTarjeta` se desestructuran solo los **datos**, no
-los métodos. Un método sacado del objeto pierde su `this` y deja de
-funcionar, así que `rescatado.esCachorro()` se sigue llamando sobre el
-objeto.
-
-## Si el navegador no deja guardar
-
-En modo privado, con el storage lleno o con la configuración bloqueada,
-`localStorage` lanza una excepción. Todas las llamadas están envueltas en
-`try/catch`: si no se puede guardar, el simulador sigue funcionando sin
-memoria entre sesiones y el mensaje de bienvenida lo avisa.
-
-## Cómo se usa
-
-1. Abrir `index.html` en el navegador.
-2. **Paso 1** — mirar los rescatados, buscarlos por nombre.
-3. **Paso 2** — completar la solicitud y evaluarla.
-4. Según el resultado, adoptar o reservar un perro desde su tarjeta.
-5. **Paso 3** — registrar el ingreso de un perro nuevo.
-6. Recargar con `F5`: todo sigue igual.
-7. **Reiniciar el refugio** borra los datos guardados y vuelve al estado inicial.
-
-## El registro de salidas
-
-Ningún perro desaparece de la pantalla sin dejar rastro. Cuando deja el
-refugio, sale del array `rescatados` y entra en `salidas`, que guarda un
-objeto literal por cada caso:
-
-```js
-function registrarSalida(rescatado, motivo, destino) {
-  const posicion = rescatados.indexOf(rescatado);
-
-  if (posicion !== -1) {
-    rescatados.splice(posicion, 1);
-  }
-
-  const salida = { rescatado: rescatado, motivo: motivo, destino: destino };
-  salidas.push(salida);
-
-  return salida;
-}
-```
-
-Hay dos motivos posibles, y el panel los distingue por color:
-
-| Motivo | Cuándo pasa | Cómo se ve |
-|---|---|---|
-| `adopcion` | La solicitud fue APROBADA y la persona se lo llevó | 🎉 verde |
-| `transito` | El perro pasó a un hogar de tránsito | 🏠 naranja |
-
-El panel arranca con la clase `oculto` y el JS se la saca en cuanto hay una
-primera salida, para no dejar una caja vacía ocupando la pantalla. Además,
-las estadísticas de arriba llevan un contador de adoptados que sale de un
-`filter` sobre el registro.
-
-### La salida a tránsito pide confirmación
-
-Sacar un perro del listado es la única acción que no se puede deshacer, así
-que necesita dos clics. El primero solo cambia el botón a "¿Confirmar?"; el
-segundo ejecuta. La variable `idPendienteBaja` recuerda de qué tarjeta se
-trata, y cualquier otra acción (adoptar, reservar, buscar) la limpia.
-
-No se usa `confirm()` porque está prohibido igual que los `alert`: la
-confirmación se resuelve con DOM y una clase de CSS.
-
-Un perro reservado por otra persona no puede pasar a tránsito: su botón
-queda deshabilitado con el motivo en el `title`.
-
-## El circuito completo de una reserva
-
-Una solicitud PREAPROBADA reserva, pero no se lleva el perro. Para cerrar el
-círculo, la persona que lo reservó puede volver más adelante:
-
-1. Reserva a Luna con una solicitud PREAPROBADA. Luna sigue en el refugio,
-   con la etiqueta `reservado`.
-2. Mientras tanto, para cualquier otra persona el botón de Luna dice
-   "Reservado por Sharon Rodríguez" y está deshabilitado.
-3. Si Sharon vuelve y su solicitud sigue siendo PREAPROBADA, su botón dice
-   "Reservado a tu nombre", también deshabilitado: falta la visita.
-4. Cuando su solicitud pasa a APROBADA —que es lo que representa haber
-   pasado la visita al domicilio— el botón se convierte en
-   **"Confirmar mi reserva"** y ahí sí se la lleva.
-
-La comparación la hace `esSuPropiaReserva()`, que cruza el `reservadoPor`
-del perro con el `nombreAdoptante` de la solicitud abierta. El método
-`adoptar()` de la clase ya tenía la regla del lado de los datos: acepta la
-entrega si la reserva es de esa misma persona y la rechaza si es de otra.
-
-## 1. Selección de elementos del DOM
-
-Todo esto vive en `vista.js`. Los nodos se buscan una sola vez, al cargar la
-página, y se guardan en constantes para no volver a buscarlos en cada render.
-
-```js
-// getElementById: el más directo cuando el elemento tiene un id único
-const contenedorRescatados = document.getElementById("contenedor-rescatados");
-const zonaMensajes = document.getElementById("zona-mensajes");
-
-// querySelector: acepta cualquier selector CSS
-const formSolicitud = document.querySelector("#form-solicitud");
-const inputBuscar = document.querySelector("#input-buscar");
-
-// querySelectorAll: devuelve una lista de nodos, se recorre con forEach
-const respuestas = document.querySelectorAll(".check-pregunta");
-```
-
-`querySelectorAll` se usa en dos lugares donde hacen falta **todos** los
-elementos que coinciden: al sumar los puntos de las casillas marcadas del
-cuestionario, y al limpiar los campos marcados con error.
-
-## 2. Renderizado dinámico
-
-También en `vista.js`. El HTML de cada tarjeta lo arma una función con **template strings**
-(backticks) y se inyecta con `innerHTML`. `map` transforma el array de
-objetos en un array de textos, y `join("")` los pega en uno solo.
-
-```js
-function plantillaTarjeta(rescatado) {
-  return `
-    <article class="tarjeta${claseReservada}${claseResaltada}" data-id="${rescatado.id}">
-      <div class="tarjeta-cabecera">
-        <h3>🐶 ${rescatado.nombre}</h3>
-        <span class="etiqueta etiqueta-${rescatado.estadoTexto()}">${rescatado.estadoTexto()}</span>
-      </div>
-      <p class="tarjeta-datos">${rescatado.sexo} · porte ${rescatado.tamanio} · ${rescatado.textoEdad()}</p>
-      <p class="tarjeta-costo">Mantenimiento: ${enPesos(rescatado.costoMensual)} por mes</p>
-      <div class="tarjeta-acciones">
-        ${plantillaBotonAccion(rescatado)}
-        <button class="boton boton-baja" data-accion="baja" data-id="${rescatado.id}">Dar de baja</button>
-      </div>
-    </article>
-  `;
-}
-
-function renderizarRescatados() {
-  const visibles = obtenerListaVisible();
-  contenedorRescatados.innerHTML = visibles.map(plantillaTarjeta).join("");
-}
-```
-
-Se renderizan dinámicamente cuatro cosas distintas:
-
-| Qué | Función | De dónde sale |
-|---|---|---|
-| Las tarjetas de los perros | `renderizarRescatados()` | el array `rescatados` |
-| Las preguntas del cuestionario | `renderizarPreguntas()` | el array `PREGUNTAS` |
-| Los números del refugio | `renderizarEstadisticas()` | un `reduce` sobre el array |
-| El resultado de la solicitud | `renderizarResultado()` | el objeto `Solicitud` |
-| El registro de salidas | `renderizarSalidas()` | el array `salidas` |
-
-**Regla del proyecto:** cada vez que el array cambia se vuelve a llamar a
-`actualizarVista()`, que redibuja las tarjetas y las estadísticas. La pantalla
-nunca se toca "a mano": siempre es un reflejo del array.
-
-### El `data-id` es la conexión entre el objeto y su tarjeta
-
-Cada botón lleva `data-id="${rescatado.id}"`. Cuando alguien lo aprieta, ese
-id permite volver del HTML al objeto con `find`:
-
-```js
-const id = Number(boton.dataset.id);
-const rescatado = buscarPorId(rescatados, id);
-```
-
-## 3. Manejo de eventos
-
-Todos los manejadores están en `main.js`, que es el único archivo que
-conecta al usuario con el resto.
-
-| Elemento | Evento | Qué hace |
-|---|---|---|
-| `#form-solicitud` | `submit` | Valida, crea la `Solicitud`, la evalúa y dibuja el resultado |
-| `#btn-limpiar-solicitud` | `click` | Vacía el formulario y el resultado |
-| `#form-rescatado` | `submit` | Valida y agrega el perro nuevo al array |
-| `#contenedor-rescatados` | `click` | Adoptar, reservar, confirmar una reserva o pasar a tránsito (delegación) |
-| `#input-buscar` | `keyup` | Filtra la lista mientras se escribe |
-| `#input-buscar` | `keydown` | La tecla `Escape` limpia la búsqueda |
-
-```js
-formSolicitud.addEventListener("submit", manejarSolicitud);
-contenedorRescatados.addEventListener("click", manejarClickEnTarjetas);
-inputBuscar.addEventListener("keyup", manejarBusqueda);
-inputBuscar.addEventListener("keydown", manejarTeclaEnBuscador);
-```
-
-Las funciones se pasan **sin paréntesis**: con paréntesis se ejecutarían al
-cargar la página en vez de esperar al evento.
+El sitio web de **Sociedad Patitas** es un proyecto del curso de Desarrollo Web de Coderhouse que cuenta con cinco secciones: **Home**, **Servicios**, **Adopciones**, **Sucursales** y **Contacto**. Este simulador de adopción fue desarrollado en el curso de JavaScript y está integrado en la pestaña **Adopciones** del sitio, donde reemplaza el contenido estático original por una aplicación interactiva que permite gestionar el refugio desde el navegador.
+
+## Sobre esta entrega
+
+Simulador de adopción del refugio canino **Sociedad Patitas**.
+Pre-Entrega 10 del curso de JavaScript — Coderhouse.
+
+---
+
+## Qué hay en esta entrega
+
+Esta entrega integra el consumo de una API externa con Fetch API, el manejo completo de errores con `try/catch/finally` y la incorporación de dos librerías de terceros (SweetAlert2 y Toastify) que reemplazan todos los mecanismos nativos de feedback. A continuación se explica cada tema con las funciones y archivos exactos donde se implementa.
+
+### Consumo de API externa con Fetch (`datos.js` → `cargarFotosDesdeAPI`)
+
+La función `cargarFotosDesdeAPI` en `datos.js` (línea 211) hace una petición a la API pública **Dog CEO** (`https://dog.ceo/api/breeds/image/random/N`) para obtener fotos aleatorias de perros y asignarlas a los rescatados del refugio.
+
+El flujo completo usa `async/await` con `try/catch/finally`:
+
+- Primero filtra los rescatados sin foto con `.filter((r) => r.foto === "")` y arma la URL con la cantidad exacta que necesita.
+- El `try` hace el `await fetch(...)`, verifica `response.ok` (lanza un error manual si el estado no es 200-299), parsea el JSON con `await response.json()` y valida que el formato sea el esperado (`datos.status === "success"` y `Array.isArray(datos.message)`). Después asigna cada URL a su rescatado con `.forEach()` y persiste en localStorage.
+- El `catch` relanza el error para que el llamador (en `main.js`) pueda notificar al usuario con un toast sin romper el simulador.
+- El `finally` llama a `actualizarVista()` para que las tarjetas se redibujen con o sin foto, en los dos casos.
+
+La petición se dispara al arrancar (`main.js`, línea 384), al registrar un ingreso nuevo (`manejarAltaRescatado`, línea 151) y al reiniciar el refugio (`manejarReinicio`, línea 313).
+
+### Promesas y async/await (`avisos.js` → `obtenerDestacadoDeLaSemana`, `cargarDestacadoDeLaSemana`)
+
+El rescatado de la semana usa una promesa creada con `new Promise` que simula un cómputo demorado con `setTimeout` (línea 19 de `avisos.js`):
+
+- `obtenerDestacadoDeLaSemana()` filtra los candidatos disponibles con `.filter(estaLibre)`, busca al de mayor costo con `.reduce()` y resuelve con `resolve({ rescatado, esperando, cuota })`. Si no hay ninguno disponible, rechaza con `reject(new Error(...))`.
+- `cargarDestacadoDeLaSemana()` (línea 52) es `async` y hace `await` sobre esa promesa. Usa `try/catch/finally` completo: el `try` desestructura la respuesta y renderiza el panel; el `catch` muestra un panel alternativo con el motivo del fallo; el `finally` quita la clase `.cargando` del panel para sacar la animación de espera.
+
+### Manejo de errores con try/catch/finally
+
+Hay cuatro bloques `try/catch/finally` distribuidos en tres archivos:
+
+| Función | Archivo | Qué protege |
+|---------|---------|-------------|
+| `cargarFotosDesdeAPI` | `datos.js` (línea 211) | La petición a la API Dog CEO. El `finally` actualiza la vista en ambos caminos |
+| `cargarDestacadoDeLaSemana` | `avisos.js` (línea 52) | La promesa del rescatado de la semana. El `finally` retira la animación de carga |
+| `apadrinarRescatado` | `main.js` (línea 157) | La validación del nombre del padrino y el estado del perro. El `finally` actualiza la vista |
+| `guardarEn` / `leerDe` / `borrarDe` | `almacenamiento.js` (líneas 30, 44, 55) | Las operaciones del Web Storage, que pueden fallar en modo privado o con storage lleno |
+
+### SweetAlert2 — modales de confirmación y alertas (`vista.js`)
+
+Reemplaza los `alert()` y `confirm()` nativos que se usaban antes. Se carga desde CDN en `index.html` y se envuelve en dos funciones propias en `vista.js`:
+
+- **`alertar(titulo, texto, icono)`** (línea 91): usa `Swal.fire()` para modales informativos. Se llama después de evaluar la solicitud para mostrar el resultado (aprobada con icono `success`, preaprobada con `info`, rechazada con `error`) y después de confirmar una adopción.
+- **`confirmar(titulo, texto, textoConfirmar)`** (línea 106): usa `Swal.fire()` con `showCancelButton: true` y devuelve una promesa que resuelve en `true` o `false`. Se usa en tres lugares de `main.js`: antes de adoptar (`manejarClickEnTarjetas`, acción `"adoptar"` y `"confirmar"`), antes de enviar a tránsito (acción `"baja"`) y antes de reiniciar el refugio (`manejarReinicio`). Los manejadores que la usan son funciones `async` que hacen `await confirmar(...)`.
+
+Los estilos de los modales están personalizados con los colores del refugio (`background: "#fdf6ec"`, `confirmButtonColor: "#6b4423"`).
+
+### Toastify — notificaciones rápidas (`vista.js` → `notificar`)
+
+Reemplaza la franja sticky de avisos de entregas anteriores. Se carga desde CDN en `index.html` y se envuelve en `notificar(texto, tipo)` en `vista.js` (línea 64).
+
+Recibe un tipo (`exito`, `info` o `error`) que determina el color del toast. Se llama en todo el simulador:
+
+- Bienvenida al cargar la página (`main.js`, línea 377)
+- Ingreso de un rescatado nuevo (`main.js`, línea 148)
+- Reserva de un perro (`main.js`, línea 262)
+- Padrinazgo exitoso o fallido (`main.js`, líneas 174 y 179)
+- Errores de validación en ambos formularios (`main.js`, passim)
+- Búsqueda limpia con Escape (`main.js`, línea 328)
+- Error al cargar fotos desde la API (`main.js`, línea 384)
+- Reinicio del refugio (`main.js`, línea 310)
+- Rescatado de la semana (`avisos.js`, línea 57)
+
+Ningún `alert()`, `confirm()` o `prompt()` nativo se usa en todo el proyecto.
+
+### Renderizado dinámico de datos de la API (`vista.js`)
+
+Las fotos recibidas de Dog CEO se inyectan en las tarjetas como elementos `<img>` dentro de un contenedor `.tarjeta-foto`, con `loading="lazy"` para no frenar la carga inicial. La función `plantillaTarjeta` (línea 216) desestructura el rescatado y usa un ternario para incluir la imagen solo si `foto` tiene valor. Si la API falla o la foto no llegó, la tarjeta se muestra completa pero sin imagen.
+
+### Manejadores async por SweetAlert2 (`main.js`)
+
+Al reemplazar `confirm()` nativo por `Swal.fire()`, las confirmaciones pasaron a ser asíncronas (devuelven una promesa). Esto convirtió a los siguientes manejadores en funciones `async`:
+
+- `manejarClickEnTarjetas` (línea 189): usa `await confirmar(...)` antes de adoptar, confirmar una reserva o enviar a tránsito.
+- `manejarReinicio` (línea 286): usa `await confirmar(...)` antes de borrar los datos.
+
+---
+
+## Lo que ya viene de entregas anteriores
+
+Esta entrega conserva e integra todo lo implementado en las PE anteriores. A continuación el mapeo completo de cada tema a su ubicación en el código.
+
+### Clases con constructor y métodos
+
+- **`Rescatado`** (`js/clases/Rescatado.js`): 10 métodos — `cuotaPadrinazgo()`, `textoEdad()`, `estadoTexto()`, `esCompatibleCon(puntosVivienda)`, `esCachorro()`, `estaDisponible()`, `reservar(nombre)`, `apadrinar(nombre)`, `adoptar(nombre)`.
+- **`Solicitud`** (`js/clases/Solicitud.js`): 3 métodos — `sumarPuntos(puntos)`, `evaluar()`, `fueAceptada()`.
+
+### Web Storage (localStorage y sessionStorage) con CRUD y clear
+
+Todo en `almacenamiento.js`. Funciones genéricas `guardarEn` / `leerDe` / `borrarDe` que reciben el almacén y la clave, con atajos `guardarLocal` / `leerLocal` / `borrarLocal` y `guardarSesion` / `leerSesion` / `borrarSesion`.
+
+- **Create/Update**: `persistirEstado()` en `datos.js` guarda rescatados y salidas en localStorage después de cada cambio. `guardarSesion` guarda la solicitud en sessionStorage.
+- **Read**: `cargarRescatados`, `cargarSalidas` y `cargarSolicitud` en `datos.js` recuperan las tres claves al arrancar.
+- **Delete**: `borrarLocal` y `borrarSesion` eliminan claves individuales.
+- **Clear**: `vaciarAlmacenamiento()` borra las tres claves del simulador de ambos almacenes.
+
+La distinción es intencional: rescatados y salidas en localStorage (persisten entre sesiones), solicitud en sessionStorage (se borra al cerrar la pestaña).
+
+### Rehidratación de objetos desde storage
+
+`rehidratarRescatado` y `rehidratarSolicitud` en `datos.js` (líneas 35 y 66) reconstruyen cada objeto plano como instancia de su clase para que vuelva a tener todos sus métodos. Usan destructuring y el operador `??` para valores por defecto.
+
+### Higher-order functions
+
+| Función | Dónde se usa | Qué hace |
+|---------|-------------|----------|
+| `.map()` | `cargarRescatados`, `cargarSalidas` (datos.js); `renderizarPreguntas`, `renderizarSalidas`, `renderizarRescatados` (vista.js) | Transforma arrays de datos en instancias rehidratadas o en HTML |
+| `.filter()` | `cargarFotosDesdeAPI`, `filtrarPorTexto`, `contarApadrinados`, `contarAdopciones` (datos.js); `obtenerDestacadoDeLaSemana` (avisos.js); `renderizarResultado` (vista.js) | Filtra por estado, texto, compatibilidad o disponibilidad |
+| `.find()` | `buscarPorId`, `buscarPorNombre` (datos.js); `repoblarFormularioSolicitud` (main.js) | Busca un rescatado por id/nombre o una opción del `<select>` |
+| `.reduce()` | `generarId`, `calcularEstadisticas` (datos.js); `obtenerDestacadoDeLaSemana` (avisos.js) | Calcula el próximo id, acumula estadísticas, encuentra el mayor costo |
+| `.forEach()` | `cargarFotosDesdeAPI` (datos.js); `manejarSolicitud` (main.js); `limpiarErrores` (vista.js) | Asigna fotos, suma puntos, limpia errores |
+| `crearFiltroPorVivienda()` | `renderizarResultado` (vista.js) | Closure: retorna un callback que filtra rescatados compatibles |
+
+### Operadores avanzados
+
+- **Destructuring**: `rehidratarRescatado`, `rehidratarSolicitud` (datos.js); `plantillaTarjeta`, `renderizarResultado`, `renderizarSalidas` (vista.js); `repoblarFormularioSolicitud` (main.js); `cargarDestacadoDeLaSemana` (avisos.js).
+- **Ternario**: `textoEdad()` (Rescatado.js); `renderizarSalidas`, `plantillaTarjeta` (vista.js); `armarMensajeDeBienvenida` (main.js).
+- **Nullish coalescing (`??`)**: `rehidratarRescatado` (datos.js, líneas 58–60); `cargarRescatados` (datos.js, línea 82); `repoblarFormularioSolicitud` (main.js, línea 352).
+- **Optional chaining (`?.`)**: `cargarRescatados` (datos.js, línea 82); `esSuPropiaReserva` (vista.js, línea 159).
+
+### DOM: selección y manipulación
+
+- Selección con `getElementById` y `querySelector` al inicio de `vista.js` (líneas 21–46).
+- `innerHTML` con template literals para renderizar tarjetas, estadísticas, salidas, resultado y rescatado de la semana.
+- `createElement` en `marcarError` (vista.js, línea 129) para inyectar mensajes de error.
+- `classList.add` / `classList.remove` para alternar clases de estado.
 
 ### Delegación de eventos
 
-Los botones de las tarjetas no llevan un listener cada uno. Hay **uno solo**
-en el contenedor:
+`contenedorRescatados.addEventListener("click", manejarClickEnTarjetas)` en `main.js` (línea 340): un solo listener en el contenedor padre maneja adoptar, reservar, confirmar, apadrinar y enviar a tránsito leyendo `dataset.accion` y `dataset.id`.
 
-```js
-contenedorRescatados.addEventListener("click", manejarClickEnTarjetas);
+### Tipos de funciones
+
+Las tres formas coexisten en el proyecto: declarativas (`crearFiltroPorVivienda` en utilidades.js), expresiones de función (`clasificarSolicitud` en utilidades.js) y funciones flecha (`enPesos`, `estaLibre` en utilidades.js; los atajos de almacenamiento.js).
+
+---
+
+## Dónde está cada tema del módulo
+
+| Tema del módulo | Archivo(s) y función(es) |
+|---|---|
+| `fetch` con `async/await` | `js/datos.js` → `cargarFotosDesdeAPI` (línea 211) |
+| `response.ok` y `response.json()` | `js/datos.js` → dentro del `try` de `cargarFotosDesdeAPI` |
+| `try/catch/finally` completo | `js/datos.js` → `cargarFotosDesdeAPI`; `js/avisos.js` → `cargarDestacadoDeLaSemana`; `js/main.js` → `apadrinarRescatado` |
+| `try/catch` (storage) | `js/almacenamiento.js` → `guardarEn`, `leerDe`, `borrarDe` |
+| Promesas (`new Promise`, `resolve`, `reject`) | `js/avisos.js` → `obtenerDestacadoDeLaSemana` (línea 19) |
+| SweetAlert2 (CDN) | `index.html` (CDN), `js/vista.js` → `alertar` (línea 91), `confirmar` (línea 106) |
+| Toastify (CDN) | `index.html` (CDN), `js/vista.js` → `notificar` (línea 64) |
+| Manejadores async (por SweetAlert2) | `js/main.js` → `manejarClickEnTarjetas` (línea 189), `manejarReinicio` (línea 286) |
+| Renderizado dinámico con datos de API | `js/vista.js` → `plantillaTarjeta` (línea 216, fotos de Dog CEO) |
+| Clases con constructor y métodos | `js/clases/Rescatado.js`, `js/clases/Solicitud.js` |
+| localStorage (CRUD + clear) | `js/almacenamiento.js` → `guardarLocal`, `leerLocal`, `borrarLocal`, `vaciarAlmacenamiento` |
+| sessionStorage | `js/almacenamiento.js` → `guardarSesion`, `leerSesion`, `borrarSesion` |
+| Rehidratación desde storage | `js/datos.js` → `rehidratarRescatado` (línea 35), `rehidratarSolicitud` (línea 66) |
+| Higher-order functions (map, filter, find, reduce, forEach) | Ver tabla detallada en la sección anterior |
+| Destructuring | `datos.js`, `vista.js`, `main.js`, `avisos.js` (ver sección Operadores) |
+| Ternario | `Rescatado.js`, `vista.js`, `main.js` |
+| Nullish coalescing (`??`) | `datos.js` (líneas 58–60, 82), `main.js` (línea 352) |
+| Optional chaining (`?.`) | `datos.js` (línea 82), `vista.js` (línea 159) |
+| Closures | `utilidades.js` → `crearFiltroPorVivienda` (línea 28) |
+| Delegación de eventos | `main.js` → `manejarClickEnTarjetas` escucha en el contenedor padre (línea 340) |
+
+---
+
+## Cómo probarlo
+
+1. Abrir `index.html` con un servidor local (Live Server) o con doble clic.
+2. Las fotos se cargan desde la API Dog CEO; se necesita conexión a internet para que aparezcan.
+3. Si no hay conexión, el simulador funciona igual: las tarjetas se muestran sin foto y un toast avisa del error.
+
+### Pruebas sugeridas
+
+- **Fotos de la API**: al cargar la página, las tarjetas muestran fotos aleatorias de perros. Registrar un ingreso nuevo y verificar que también recibe su foto.
+- **SweetAlert2**: hacer click en "Adoptar" (con solicitud aprobada) → aparece un modal de confirmación. Cancelar → no pasa nada. Confirmar → se adopta y sale un modal de éxito. Lo mismo con "Pasó a tránsito" y "Reiniciar el refugio".
+- **Toastify**: cada acción muestra un toast en la esquina superior derecha con color según el tipo (verde para éxito, naranja para info, rojo para error).
+- **Error de API**: desconectar internet y registrar un ingreso → el toast avisa que no se pudo cargar la foto pero el perro se agrega igual.
+- **Persistencia**: refrescar la página y comprobar que rescatados, salidas y solicitud se conservan.
+- **Reinicio**: confirmar en el modal → los 7 perros originales vuelven con fotos nuevas.
+
+---
+
+## Estructura de archivos
+
+```
+sociedad-patitas-pre-entrega-10/
+├── index.html                  ← Página principal, carga CDNs y 9 scripts con defer
+├── README.md
+├── css/
+│   └── styles.css              ← Estilos propios (variables, grid, animaciones, responsive)
+└── js/
+    ├── config.js               ← Constantes de configuración y reglas de negocio
+    ├── clases/
+    │   ├── Rescatado.js        ← Clase Rescatado (10 métodos)
+    │   └── Solicitud.js        ← Clase Solicitud (3 métodos)
+    ├── almacenamiento.js       ← Web Storage: localStorage + sessionStorage con CRUD y clear
+    ├── utilidades.js           ← Funciones puras: enPesos, clasificarSolicitud, crearFiltroPorVivienda
+    ├── datos.js                ← Array de objetos, rehidratación, persistencia y fetch a Dog CEO API
+    ├── vista.js                ← DOM, renderizado, SweetAlert2 (alertar/confirmar) y Toastify (notificar)
+    ├── avisos.js               ← Rescatado de la semana (Promise + async/await + try/catch/finally)
+    └── main.js                 ← Eventos, manejadores async y arranque
 ```
 
-El motivo es que las tarjetas se vuelven a dibujar enteras en cada render:
-los botones viejos desaparecen y los nuevos no tendrían listener. Poniendo el
-listener en el contenedor, que nunca se reemplaza, el problema desaparece. Ahí
-entra el objeto `event`: `event.target` dice exactamente qué botón se apretó y
-`dataset` trae la acción y el id.
+Los 9 scripts se cargan con `defer` en orden de dependencia: `config.js` → clases → `almacenamiento.js` → `utilidades.js` → `datos.js` → `vista.js` → `avisos.js` → `main.js`.
 
-```js
-function manejarClickEnTarjetas(evento) {
-  const boton = evento.target;
-  const accion = boton.dataset.accion;
-
-  if (accion === undefined) {
-    return; // el clic no cayó sobre un botón con acción
-  }
-  // ...
-}
-```
-
-### El evento de teclado
-
-```js
-function manejarBusqueda(evento) {
-  textoBusqueda = evento.target.value;
-  actualizarVista();
-}
-
-function manejarTeclaEnBuscador(evento) {
-  if (evento.key === "Escape") {
-    inputBuscar.value = "";
-    textoBusqueda = "";
-    actualizarVista();
-  }
-}
-```
-
-`evento.key` es la propiedad que dice qué tecla se presionó. Sin el objeto
-`event` solo sabríamos que se presionó algo, no el qué.
-
-## 4. Feedback visual
-
-Cada acción del usuario tiene una respuesta en pantalla:
-
-- **Mensajes.** `mostrarMensaje(texto, tipo)` crea un `<p>` con
-  `createElement`, le pone el texto con `textContent`, lo cuelga con
-  `appendChild` y lo saca solo con `remove()` a los 4,5 segundos. El tipo
-  (`exito`, `info`, `error`) define el color. La franja es `position: sticky`
-  para que el aviso se lea aunque la acción se haya disparado desde un
-  formulario del final de la página.
-- **Campos con error.** El input mal completado recibe la clase
-  `campo-error` (borde rojo), el foco, y un `<span>` debajo con el motivo
-  concreto. `limpiarErrores()` borra las marcas y los textos en cada envío.
-- **Tarjeta resaltada.** El perro recién agregado o recién reservado aparece
-  con la clase `tarjeta-nueva`, que dispara una animación de destaque.
-- **Estados de la tarjeta.** Un perro reservado cambia de color, muestra la
-  etiqueta `reservado` y su botón queda deshabilitado con el nombre de quien
-  lo apartó.
-- **Botones que se adaptan.** Sin solicitud evaluada el botón dice "Adoptar"
-  pero está bloqueado; con la solicitud aprobada se habilita; con la
-  preaprobada pasa a decir "Reservar"; si el perro no entra en esa vivienda
-  dice "Necesita más espacio".
-
-```js
-function mostrarMensaje(texto, tipo) {
-  const aviso = document.createElement("p");
-  aviso.className = "aviso aviso-" + tipo;
-  aviso.textContent = texto;
-
-  zonaMensajes.innerHTML = "";
-  zonaMensajes.appendChild(aviso);
-
-  setTimeout(function () {
-    aviso.remove();
-  }, DURACION_MENSAJE);
-}
-```
-
-`textContent` y no `innerHTML`: el texto del mensaje puede incluir un nombre
-escrito por el usuario, y `textContent` lo muestra tal cual en lugar de
-interpretarlo como HTML.
-
-## 5. Lo que se mantiene de las entregas anteriores
-
-- **Las clases `Rescatado` y `Solicitud`**, con sus métodos
-  (`esCompatibleCon`, `esCachorro`, `estaDisponible`, `reservar`, `adoptar`,
-  `sumarPuntos`, `evaluar`, `fueAceptada`).
-- **El array de instancias** creado con `new`, que ahora es la fuente de todo
-  lo que se dibuja.
-- **Las funciones de orden superior**: `map` para el render, `filter` para la
-  búsqueda y la compatibilidad, `find` para localizar un perro por id o por
-  nombre, `reduce` para las estadísticas y para generar el próximo id,
-  `forEach` para recorrer las listas de nodos.
-- **La regla de negocio de la Pre-Entrega 6**: una solicitud APROBADA se
-  lleva el perro; una PREAPROBADA solo puede reservarlo hasta la visita al
-  domicilio.
-
-| Puntaje sobre 13 | Estado | Qué puede hacer |
-|---|---|---|
-| 11 a 13 | APROBADA | Adoptar en el momento |
-| 7 a 10 | PREAPROBADA | Reservar hasta la visita |
-| 0 a 6 | RECHAZADA | Ninguna acción sobre las tarjetas |
-
-## 6. Estilos
-
-`css/styles.css` define la paleta del refugio con variables CSS, un layout en
-grilla que pasa a una sola columna en pantallas chicas, tarjetas con estados
-visuales diferenciados, y dos animaciones: la aparición de los mensajes y el
-destaque de la tarjeta recién agregada.
+---
 
 ## Autor
 
-Sharon Rodríguez — Pre-Entrega 9 · Curso de JavaScript · Coderhouse
+Sharon Rodríguez — Pre-Entrega 10 · Curso de JavaScript · Coderhouse

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contacto | Sociedad Patitas</title>
+  <meta name="description" content="Contactanos para adoptar, ser voluntario o hacer una consulta. Formulario, teléfono y redes de Sociedad Patitas.">
+  <meta name="author" content="Sociedad Patitas">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#229386">
+  <link rel="canonical" href="https://sociedadpatitas.org/page/contacto.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Contacto | Sociedad Patitas">
+  <meta property="og:description" content="Contactanos para adoptar, ser voluntario o consultar.">
+  <meta property="og:image" content="../img/logo.png">
+  <meta property="og:locale" content="es_AR">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/svg+xml" href="../img/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap" rel="stylesheet">
+  <!-- Bootstrap para el formulario -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <div class="nav">
+        <a class="nav__logo" href="../index.html" aria-label="Sociedad Patitas — Inicio">
+          <img src="../img/logo.svg" alt="Logo Sociedad Patitas" width="52" height="52">
+        </a>
+        <nav class="nav__menu" aria-label="Navegación principal">
+          <a href="../index.html">Home</a>
+          <a href="../page/servicios.html">Servicios</a>
+          <a href="../page/adopciones.html">Adopciones</a>
+          <a href="../page/sucursales.html">Sucursales</a>
+          <a href="#" aria-current="page">Contacto</a>
+        </nav>
+        <div class="nav__cta">
+          <a class="btn btn--honey" href="./adopciones.html"><span>Quiero adoptar</span> 🐾</a>
+          <button class="nav__burger" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-nav">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
+        </div>
+      </div>
+      <nav class="nav__mobile" id="mobile-nav" aria-label="Menú móvil">
+        <a href="../index.html" aria-current="page">Home</a>
+        <a href="../page/servicios.html">Servicios</a>
+        <a href="../page/adopciones.html">Adopciones</a>
+        <a href="../page/sucursales.html">Sucursales</a>
+        <a href="#">Contacto</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="page-hero wrap">
+      <span class="eyebrow">Hablemos</span>
+      <h1>Estamos para ayudarte</h1>
+      <p class="lead">¿Quieres adoptar, ser voluntario o hacer una consulta? Completa el formulario o escríbenos directamente.</p>
+    </section>
+
+    <section class="contact wrap">
+      <div class="contact__grid">
+
+        <!-- FORMULARIO -->
+        <form action="https://formspree.io/f/tu-id" method="POST"
+              novalidate aria-label="Formulario de contacto"
+              class="needs-validation">
+
+          <div class="mb-3">
+            <label for="nombre" class="form-label fw-semibold">Nombre y apellido</label>
+            <input type="text" class="form-control" id="nombre" name="nombre"
+              placeholder="Tu nombre completo" required aria-required="true">
+            <div class="invalid-feedback">Por favor ingresa tu nombre.</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="email" class="form-label fw-semibold">Correo electrónico</label>
+            <input type="email" class="form-control" id="email" name="email"
+              placeholder="tucorreo@email.com" required aria-required="true">
+            <div class="invalid-feedback">Por favor ingresa un email válido.</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="asunto" class="form-label fw-semibold">Asunto</label>
+            <select class="form-select" id="asunto" name="asunto"
+              aria-label="Motivo de consulta" required aria-required="true">
+              <option value="" disabled selected>Selecciona una opción</option>
+              <option value="adoptar">Quiero adoptar</option>
+              <option value="transito">Ser hogar de tránsito</option>
+              <option value="voluntario">Ser voluntario</option>
+              <option value="donacion">Hacer una donación</option>
+              <option value="otro">Otra consulta</option>
+            </select>
+            <div class="invalid-feedback">Por favor selecciona un asunto.</div>
+          </div>
+
+          <div class="mb-4">
+            <label for="mensaje" class="form-label fw-semibold">Mensaje</label>
+            <textarea class="form-control" id="mensaje" name="mensaje" rows="5"
+              placeholder="Contanos en qué podemos ayudarte"
+              required aria-required="true"></textarea>
+            <div class="invalid-feedback">Por favor escribe tu mensaje.</div>
+          </div>
+
+          <button type="submit" class="btn btn--primary btn--block">
+            Enviar mensaje 🐾
+          </button>
+        </form>
+
+        <!-- DATOS DE CONTACTO -->
+        <aside class="contact-info" aria-label="Información de contacto">
+          <div class="contact-info__item fade-up">
+            <span class="icon"><img src="../img/phone-filled.svg" alt="" aria-hidden="true"></span>
+            <div><h4>Teléfono</h4><p><a href="tel:+541155555555">+54 11 5555 5555</a></p></div>
+          </div>
+          <div class="contact-info__item fade-up">
+            <span class="icon"><img src="../img/wsp.svg" alt="" aria-hidden="true"></span>
+            <div><h4>WhatsApp</h4><p><a href="https://wa.me/541155555555" target="_blank" rel="noopener">Escríbenos ahora</a></p></div>
+          </div>
+          <div class="contact-info__item fade-up">
+            <span class="icon"><img src="../img/ig.svg" alt="" aria-hidden="true"></span>
+            <div><h4>Instagram</h4><p><a href="#" target="_blank" rel="noopener">@sociedadpatitas</a></p></div>
+          </div>
+          <div class="contact-info__item fade-up">
+            <span class="icon"><img src="../img/fb.svg" alt="" aria-hidden="true"></span>
+            <div><h4>Facebook</h4><p><a href="#" target="_blank" rel="noopener">Sociedad Patitas</a></p></div>
+          </div>
+          <div class="contact-info__item fade-up">
+            <span class="icon">
+              <img src="../img/pin-filled.svg" width="22" height="22" alt="" aria-hidden="true">
+            </span>
+            <div><h4>Dirección principal</h4><p>Av. Santa Fe 3200, Palermo, CABA</p></div>
+          </div>
+        </aside>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="site-footer__grid">
+        <div class="site-footer__brand">
+          <img src="../img/logo.svg" alt="Logo Sociedad Patitas">
+          <p>Rescate, cuidado y adopción responsable de perros en situación de abandono.</p>
+          <div class="socials">
+            <a href="https://www.facebook.com" aria-label="Facebook" target="_blank" rel="noopener"><img src="../img/fb.svg" alt="Facebook"></a>
+            <a href="https://www.instagram.com" aria-label="Instagram" target="_blank" rel="noopener"><img src="../img/ig.svg" alt="Instagram"></a>
+            <a href="tel:+541155555555" aria-label="Llamanos"><img src="../img/phone-filled.svg" alt="Teléfono"></a>
+          </div>
+        </div>
+        <nav aria-label="Pie de página">
+          <h4>Páginas</h4>
+          <ul>
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="./servicios.html">Servicios</a></li>
+            <li><a href="./adopciones.html">Adopciones</a></li>
+            <li><a href="./sucursales.html">Sucursales</a></li>
+            <li><a href="#">Contacto</a></li>
+          </ul>
+        </nav>
+        <div>
+          <h4>Contacto</h4>
+          <ul>
+            <li><a href="mailto:hola@sociedadpatitas.org">hola@sociedadpatitas.org</a></li>
+            <li><a href="tel:+541155555555">+54 11 5555 5555</a></li>
+            <li>Buenos Aires, Argentina</li>
+          </ul>
+        </div>
+      </div>
+      <p class="site-footer__bottom">© 2026 Sociedad Patitas · Hecho con 💛 por y para los perros</p>
+    </div>
+  </footer>
+
+  <a class="wsp-float" href="https://wa.me/541155555555" aria-label="Escribinos por WhatsApp" target="_blank" rel="noopener">
+    <img src="../img/wsp-white.svg" alt="" aria-hidden="true">
+  </a>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Validación Bootstrap
+    (() => {
+      'use strict';
+      document.querySelectorAll('.needs-validation').forEach(form => {
+        form.addEventListener('submit', e => {
+          if (!form.checkValidity()) { e.preventDefault(); e.stopPropagation(); }
+          form.classList.add('was-validated');
+        }, false);
+      });
+    })();
+    // Burger
+    const burger = document.querySelector('.nav__burger');
+    const mobileNav = document.getElementById('mobile-nav');
+    burger.addEventListener('click', () => { const open = mobileNav.classList.toggle('open'); burger.setAttribute('aria-expanded', open); });
+    // Fade-up
+    const obs = new IntersectionObserver(els => els.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } }), { threshold:.15 });
+    document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+  </script>
+
+</body>
+</html>

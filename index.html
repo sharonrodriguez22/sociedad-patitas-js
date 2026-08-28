@@ -1,203 +1,175 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sociedad Patitas | Simulador de Adopción</title>
-  <link rel="stylesheet" href="css/styles.css">
-
-  <!-- El JavaScript está separado por responsabilidades. Todos los
-       scripts llevan defer: se descargan en paralelo pero se ejecutan
-       en este orden, recién cuando el HTML terminó de leerse.
-       El orden importa: datos.js crea las instancias, así que las
-       clases tienen que estar definidas antes. -->
-  <script src="js/config.js" defer></script>
-  <script src="js/clases/Rescatado.js" defer></script>
-  <script src="js/clases/Solicitud.js" defer></script>
-  <script src="js/almacenamiento.js" defer></script>
-  <script src="js/utilidades.js" defer></script>
-  <script src="js/datos.js" defer></script>
-  <script src="js/vista.js" defer></script>
-  <script src="js/avisos.js" defer></script>
-  <script src="js/main.js" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sociedad Patitas | Rescate y adopción responsable de perros</title>
+    <meta name="description" content="Rescatamos perros en situación de abandono y los acompañamos hasta encontrar su familia. Adopción responsable en Buenos Aires.">
+    <meta name="keywords" content="adopción perros, rescate canino, refugio, Buenos Aires, voluntariado">
+    <meta name="author" content="Sociedad Patitas">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#229386">
+    <link rel="canonical" href="https://sociedadpatitas.org/">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Sociedad Patitas | Adopción responsable de perros">
+    <meta property="og:description" content="Cada patita merece un hogar. Conocé a nuestros perros en adopción.">
+    <meta property="og:image" content="./img/logo.png">
+    <meta property="og:url" content="https://sociedadpatitas.org/">
+    <meta property="og:locale" content="es_AR">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" type="image/svg+xml" href="./img/logo.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
-
-  <header class="encabezado">
-    <h1>🐾 Sociedad Patitas</h1>
-    <p class="subtitulo">Refugio canino · Simulador de adopción</p>
-  </header>
-
-  <!-- Franja donde el JS inyecta los mensajes de feedback -->
-  <div id="zona-mensajes" class="zona-mensajes" role="status" aria-live="polite"></div>
-
-  <main class="tablero">
-
-    <!-- ============================================================
-         RESCATADO DE LA SEMANA
-         Arranca con la clase "cargando": el refugio tarda unos
-         segundos en resolver a quién difunde, y mientras tanto el
-         resto de la pantalla funciona con normalidad.
-         ============================================================ -->
-    <section class="panel panel-ancho panel-destacado cargando" id="panel-destacado">
-      <h2>🌟 Rescatado de la semana</h2>
-      <div id="contenido-destacado" class="destacado-cuerpo">
-        <p class="destacado-espera">Consultando al refugio…</p>
-      </div>
-    </section>
-
-    <!-- ============================================================
-         PANEL 1 · RESCATADOS DEL REFUGIO
-         ============================================================ -->
-    <section class="panel panel-ancho" id="panel-refugio">
-      <h2><span class="numero">1</span> Rescatados del refugio</h2>
-      <p class="ayuda">Estos son los perros que esperan hogar. Para adoptar o reservar
-        alguno, primero completa la solicitud del paso 2. Para apadrinar no hace falta
-        solicitud: alcanza con dejar tu nombre. Todo lo que hagas queda guardado en tu
-        navegador: si recargas la página, sigue estando.</p>
-
-      <div class="barra-superior">
-        <div class="campo campo-busqueda">
-          <label for="input-buscar">Buscar por nombre</label>
-          <input type="search" id="input-buscar" placeholder="Escribe un nombre… (Esc para limpiar)" autocomplete="off">
+    <header class="site-header">
+        <div class="wrap">
+            <div class="nav">
+                <a class="nav__logo" href="./index.html" aria-label="Sociedad Patitas — Inicio">
+                    <img src="./img/logo.svg" alt="Logo Sociedad Patitas" width="52" height="52">
+                </a>
+                <nav class="nav__menu" aria-label="Navegación principal">
+                    <a href="#" aria-current="page">Home</a>
+                    <a href="./page/servicios.html">Servicios</a>
+                    <a href="./page/adopciones.html">Adopciones</a>
+                    <a href="./page/sucursales.html">Sucursales</a>
+                    <a href="./page/contacto.html">Contacto</a>
+                </nav>
+                <div class="nav__cta">
+                    <a class="btn btn--honey" href="./page/adopciones.html"><span>Quiero adoptar</span> 🐾</a>
+                    <button class="nav__burger" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-nav">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+                    </button>
+                </div>
+            </div>
+            <nav class="nav__mobile" id="mobile-nav" aria-label="Menú móvil">
+                <a href="#" aria-current="page">Home</a>
+                    <a href="./page/servicios.html">Servicios</a>
+                    <a href="./page/adopciones.html">Adopciones</a>
+                    <a href="./page/sucursales.html">Sucursales</a>
+                    <a href="./page/contacto.html">Contacto</a>
+            </nav>
         </div>
-        <div class="campo campo-padrino">
-          <label for="input-padrino">Apadrinar a nombre de</label>
-          <input type="text" id="input-padrino" placeholder="Tu nombre y apellido" autocomplete="off">
+    </header>
+
+    <main>
+        <!-- HERO -->
+        <section class="hero" aria-labelledby="hero-title">
+            <div class="wrap">
+                <div class="hero__grid">
+                    <div class="hero__copy">
+                        <span class="eyebrow">🐾 Buenos Aires, Argentina</span>
+                        <h1 id="hero-title">Cada perro merece un hogar con <span class="accent">amor</span></h1>
+                        <p class="lead">Rescatamos, rehabilitamos y conectamos perros abandonados con familias responsables.</p>
+                        <div class="hero__actions">
+                            <a class="btn btn--primary" href="./page/adopciones.html">Ver perros en adopción</a>
+                            <a class="btn btn--ghost" href="./page/contacto.html">Ser voluntario</a>
+                        </div>
+                        <div class="stats">
+                            <div><div class="stats__num">+800</div><div class="stats__label">Rescatados</div></div>
+                            <div><div class="stats__num">+620</div><div class="stats__label">Adoptados</div></div>
+                            <div><div class="stats__num">3</div><div class="stats__label">Sedes</div></div>
+                        </div>
+                    </div>
+                    <div class="hero__art" aria-hidden="true">
+                        <div class="hero__blob"></div>
+                        <svg class="hero__dog" viewBox="0 0 320 300" xmlns="http://www.w3.org/2000/svg">
+                            <ellipse cx="160" cy="265" rx="92" ry="16" fill="#1B7468" opacity=".18"/>
+                            <path d="M92 120c-26-6-40 18-30 40 6 13 22 16 34 12" fill="#FBF8F1"/>
+                            <path d="M228 120c26-6 40 18 30 40-6 13-22 16-34 12" fill="#FBF8F1"/>
+                            <ellipse cx="160" cy="170" rx="86" ry="84" fill="#FBF8F1"/>
+                            <path d="M95 95c-14-22-8-44 8-44s24 24 16 44Z" fill="#F4EEE2"/>
+                            <path d="M225 95c14-22 8-44-8-44s-24 24-16 44Z" fill="#F4EEE2"/>
+                            <ellipse cx="160" cy="190" rx="52" ry="44" fill="#fff"/>
+                            <circle cx="132" cy="158" r="9" fill="#2B2724"/>
+                            <circle cx="188" cy="158" r="9" fill="#2B2724"/>
+                            <circle cx="135" cy="155" r="3" fill="#fff"/>
+                            <circle cx="191" cy="155" r="3" fill="#fff"/>
+                            <ellipse cx="160" cy="188" rx="13" ry="9" fill="#2B2724"/>
+                            <path d="M160 197v14c0 9-10 9-14 4M160 211c0 9 10 9 14 4" fill="none" stroke="#2B2724" stroke-width="4" stroke-linecap="round"/>
+                            <circle cx="112" cy="186" r="11" fill="#FF8A6B" opacity=".5"/>
+                            <circle cx="208" cy="186" r="11" fill="#FF8A6B" opacity=".5"/>
+                        </svg>
+                        <svg class="paw paw--1" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="6" cy="9" r="2.4"/><circle cx="12" cy="6.5" r="2.4"/><circle cx="18" cy="9" r="2.4"/><circle cx="9" cy="13.5" r="2.4"/><circle cx="15" cy="13.5" r="2.4"/><path d="M12 13c4 0 7 2.4 7 5.4S15.5 22 12 22s-7-.6-7-3.6S8 13 12 13Z"/></svg>
+                        <svg class="paw paw--2" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="6" cy="9" r="2.4"/><circle cx="12" cy="6.5" r="2.4"/><circle cx="18" cy="9" r="2.4"/><circle cx="9" cy="13.5" r="2.4"/><circle cx="15" cy="13.5" r="2.4"/><path d="M12 13c4 0 7 2.4 7 5.4S15.5 22 12 22s-7-.6-7-3.6S8 13 12 13Z"/></svg>
+                        <svg class="paw paw--3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="6" cy="9" r="2.4"/><circle cx="12" cy="6.5" r="2.4"/><circle cx="18" cy="9" r="2.4"/><circle cx="9" cy="13.5" r="2.4"/><circle cx="15" cy="13.5" r="2.4"/><path d="M12 13c4 0 7 2.4 7 5.4S15.5 22 12 22s-7-.6-7-3.6S8 13 12 13Z"/></svg>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SOBRE NOSOTROS -->
+        <section class="about wrap" aria-labelledby="about-title">
+            <div class="about__card">
+                <div class="about__badge" aria-hidden="true">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                        <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" fill="currentColor" opacity=".18"/>
+                        <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/>
+                    </svg>
+                </div>
+                <div>
+                    <span class="eyebrow">Quiénes somos</span>
+                    <h2 id="about-title">Una comunidad que cuida a quienes no tienen voz</h2>
+                    <p>Somos una ONG sin fines de lucro fundada en 2015. Con voluntarios, veterinarios y familias de tránsito garantizamos que cada perro reciba el cuidado que necesita hasta encontrar su hogar.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>    
+    
+    <footer class="site-footer">
+        <div class="wrap">
+            <div class="site-footer__grid">
+                <div class="site-footer__brand">
+                    <img src="./img/logo.svg" alt="Logo Sociedad Patitas">
+                    <p>Rescate, cuidado y adopción responsable de perros en situación de abandono en Buenos Aires.</p>
+                    <div class="socials">
+                        <a href="https://www.facebook.com" aria-label="Facebook" target="_blank" rel="noopener"><img src="./img/fb.svg" alt="Facebook" width="26" height="26"></a>
+                        <a href="https://www.instagram.com" aria-label="Instagram" target="_blank" rel="noopener"><img src="./img/ig.svg" alt="Instagram" width="26" height="26"></a>
+                        <a href="tel:+541155555555" aria-label="Llamanos"><img src="./img/phone-filled.svg" alt="Teléfono" width="26" height="26"></a>
+                    </div>
+                </div>
+                <nav aria-label="Navegación pie de página">
+                    <h4>Páginas</h4>
+                    <ul>
+                        <li><a href="#">Home</a></li>
+                        <li><a href="./page/servicios.html">Servicios</a></li>
+                        <li><a href="./page/adopciones.html">Adopciones</a></li>
+                        <li><a href="./page/sucursales.html">Sucursales</a></li>
+                        <li><a href="./page/contacto.html">Contacto</a></li>
+                    </ul>
+                </nav>
+                <div>
+                    <h4>Contacto</h4>
+                    <ul>
+                        <li><a href="mailto:hola@sociedadpatitas.org">hola@sociedadpatitas.org</a></li>
+                        <li><a href="tel:+541155555555">+54 11 5555 5555</a></li>
+                        <li>Buenos Aires, Argentina</li>
+                    </ul>
+                </div>
+            </div>
+            <p class="site-footer__bottom">© 2026 Sociedad Patitas · Hecho con 💛 por y para los perros</p>
         </div>
-        <div id="estadisticas" class="estadisticas"></div>
-      </div>
+    </footer>
 
-      <!-- Aquí el JS inyecta las tarjetas de cada rescatado -->
-      <div id="contenedor-rescatados" class="grilla"></div>
+    <a class="wsp-float" href="https://wa.me/541155555555" aria-label="Escribinos por WhatsApp" target="_blank" rel="noopener">
+        <img src="img/wsp-white.svg" alt="" aria-hidden="true">
+    </a>
 
-      <div class="pie-panel">
-        <button type="button" id="btn-reiniciar" class="boton boton-secundario"
-                data-confirmando="no"
-                title="Borra los datos guardados en el navegador y vuelve al estado inicial">
-          Reiniciar el refugio
-        </button>
-      </div>
-    </section>
-
-    <!-- ============================================================
-         REGISTRO DE SALIDAS
-         Arranca oculto con la clase "oculto" y el JS se la saca en
-         cuanto hay una primera salida, para no dejar una caja vacía.
-         ============================================================ -->
-    <section class="panel panel-ancho panel-registro oculto" id="panel-salidas">
-      <h2>🎉 Registro de salidas</h2>
-      <p class="ayuda">Cada perro que deja el refugio queda anotado aquí, con el
-        motivo por el que se fue.</p>
-
-      <!-- Aquí el JS inyecta una línea por cada salida -->
-      <ul id="contenedor-salidas" class="registro"></ul>
-    </section>
-
-    <!-- ============================================================
-         PANEL 2 · SOLICITUD DE ADOPCIÓN
-         ============================================================ -->
-    <section class="panel" id="panel-solicitud">
-      <h2><span class="numero">2</span> Tu solicitud de adopción</h2>
-      <p class="ayuda">Completa tus datos y el cuestionario. El puntaje define si puedes
-        adoptar en el momento o si primero coordinamos una visita.</p>
-
-      <form id="form-solicitud" class="formulario" novalidate>
-        <div class="campo">
-          <label for="input-nombre">Nombre y apellido</label>
-          <input type="text" id="input-nombre" placeholder="Ej: Sharon Rodríguez" autocomplete="off">
-        </div>
-
-        <div class="fila">
-          <div class="campo">
-            <label for="input-edad">Edad</label>
-            <input type="number" id="input-edad" min="1" max="100" placeholder="Ej: 30">
-          </div>
-
-          <div class="campo">
-            <label for="select-vivienda">Tipo de vivienda</label>
-            <select id="select-vivienda">
-              <option value="">Elige una opción</option>
-              <option value="3">Casa con patio</option>
-              <option value="2">Casa sin patio</option>
-              <option value="2">Departamento con balcón</option>
-              <option value="1">Departamento sin balcón</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- El cuestionario lo genera el JS recorriendo el array PREGUNTAS -->
-        <fieldset class="cuestionario">
-          <legend>Cuestionario de responsabilidad</legend>
-          <div id="contenedor-preguntas"></div>
-        </fieldset>
-
-        <div class="acciones-form">
-          <button type="submit" class="boton boton-primario">Evaluar solicitud</button>
-          <button type="button" id="btn-limpiar-solicitud" class="boton boton-secundario">Limpiar</button>
-        </div>
-      </form>
-
-      <!-- Aquí el JS inyecta el resultado de la evaluación -->
-      <div id="resultado-solicitud" class="resultado"></div>
-    </section>
-
-    <!-- ============================================================
-         PANEL 3 · ALTA DE UN RESCATADO
-         ============================================================ -->
-    <section class="panel" id="panel-alta">
-      <h2><span class="numero">3</span> Registrar un ingreso</h2>
-      <p class="ayuda">Cuando llega un perro nuevo al refugio, se carga aquí y aparece
-        en la lista al instante.</p>
-
-      <form id="form-rescatado" class="formulario" novalidate>
-        <div class="campo">
-          <label for="input-nombre-perro">Nombre del perro</label>
-          <input type="text" id="input-nombre-perro" placeholder="Ej: Trueno" autocomplete="off">
-        </div>
-
-        <div class="fila">
-          <div class="campo">
-            <label for="select-sexo">Sexo</label>
-            <select id="select-sexo">
-              <option value="">Elige</option>
-              <option value="hembra">Hembra</option>
-              <option value="macho">Macho</option>
-            </select>
-          </div>
-
-          <div class="campo">
-            <label for="input-edad-perro">Edad (años)</label>
-            <input type="number" id="input-edad-perro" min="0" max="25" placeholder="Ej: 2">
-          </div>
-        </div>
-
-        <div class="fila">
-          <div class="campo">
-            <label for="select-porte">Porte</label>
-            <select id="select-porte">
-              <option value="">Elige</option>
-              <option value="chico">Chico</option>
-              <option value="mediano">Mediano</option>
-              <option value="grande">Grande</option>
-            </select>
-          </div>
-
-          <div class="campo">
-            <label for="input-costo">Mantenimiento mensual ($)</label>
-            <input type="number" id="input-costo" min="0" step="500" placeholder="Ej: 15000">
-          </div>
-        </div>
-
-        <div class="acciones-form">
-          <button type="submit" class="boton boton-primario">+ Agregar al refugio</button>
-        </div>
-      </form>
-    </section>
-
-  </main>
-
-  <footer class="pie">Pre-Entrega 9 · Curso de JavaScript · Coderhouse</footer>
-
+    <script>
+        // Burger menu
+        const burger = document.querySelector('.nav__burger');
+        const mobileNav = document.getElementById('mobile-nav');
+        burger.addEventListener('click', () => {
+        const open = mobileNav.classList.toggle('open');
+        burger.setAttribute('aria-expanded', open);
+        });
+        // Fade-up scroll
+        const obs = new IntersectionObserver(els => els.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } }), { threshold:.15 });
+        document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+    </script> 
+    
 </body>
 </html>

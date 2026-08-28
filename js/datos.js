@@ -1,5 +1,5 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 9
+   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 10
    datos.js · El array de objetos, su memoria y sus consultas
 
    La capa de datos del simulador. Al cargar la página levanta el
@@ -45,20 +45,19 @@ function rehidratarRescatado(datos) {
     adoptado,
     adoptadoPor,
     apadrinado,
-    apadrinadoPor
+    apadrinadoPor,
+    foto
   } = datos;
 
   const rescatado = new Rescatado(id, nombre, sexo, edad, tamanio, costoMensual);
 
-  // El constructor siempre crea al perro disponible, así que hay que
-  // devolverle el estado de reserva, adopción y padrinazgo que tenía
-  // guardado.
   rescatado.reservado = reservado;
   rescatado.reservadoPor = reservadoPor;
   rescatado.adoptado = adoptado;
   rescatado.adoptadoPor = adoptadoPor;
   rescatado.apadrinado = apadrinado ?? false;
   rescatado.apadrinadoPor = apadrinadoPor ?? "";
+  rescatado.foto = foto ?? "";
 
   return rescatado;
 }
@@ -78,15 +77,11 @@ function rehidratarSolicitud(datos) {
    3) CARGA DEL ESTADO
    ------------------------------------------------------------ */
 
-// Recupera los perros guardados. Si el refugio se abre por primera
-// vez y no hay nada en memoria, arranca con la lista inicial.
 function cargarRescatados() {
   const guardados = leerLocal(CLAVE_RESCATADOS);
   return guardados?.map(rehidratarRescatado) ?? crearRescatadosIniciales();
 }
 
-// Recupera el registro de salidas. Cada salida guardada tiene la
-// forma { rescatado, motivo, destino }.
 function cargarSalidas() {
   const guardadas = leerLocal(CLAVE_SALIDAS);
 
@@ -97,8 +92,6 @@ function cargarSalidas() {
   })) ?? [];
 }
 
-// La solicitud vive en sessionStorage: sobrevive a un F5, no a cerrar
-// la pestaña.
 function cargarSolicitud() {
   const guardada = leerSesion(CLAVE_SOLICITUD);
   return guardada ? rehidratarSolicitud(guardada) : null;
@@ -106,24 +99,17 @@ function cargarSolicitud() {
 
 /* ------------------------------------------------------------
    4) EL ESTADO VIVO
-   Se arma una sola vez, al cargar la página.
    ------------------------------------------------------------ */
 const rescatados = cargarRescatados();
 
 /* ------------------------------------------------------------
    REGISTRO DE SALIDAS
-   Cuando un perro deja el refugio hay que dejar constancia de qué
-   pasó con él. Por eso no se borra sin más: sale de "rescatados" y
-   entra en "salidas", que guarda un objeto literal por cada caso.
    ------------------------------------------------------------ */
 const salidas = cargarSalidas();
 
-// Motivos posibles de una salida
 const MOTIVO_ADOPCION = "adopcion";
 const MOTIVO_TRANSITO = "transito";
 
-// Saca al perro del refugio y lo anota en el registro de salidas.
-// Retorna el objeto que quedó anotado.
 function registrarSalida(rescatado, motivo, destino) {
   const posicion = rescatados.indexOf(rescatado);
 
@@ -137,12 +123,10 @@ function registrarSalida(rescatado, motivo, destino) {
   return salida;
 }
 
-// Cuántos perros del refugio ya tienen padrino o madrina.
 function contarApadrinados(lista) {
   return lista.filter((rescatado) => rescatado.apadrinado).length;
 }
 
-// Cuántas de las salidas fueron adopciones.
 function contarAdopciones(lista) {
   return lista.filter((salida) => salida.motivo === MOTIVO_ADOPCION).length;
 }
@@ -151,8 +135,6 @@ function contarAdopciones(lista) {
    GUARDADO Y REINICIO
    ------------------------------------------------------------ */
 
-// Se llama después de cada cambio: alta, adopción, reserva o salida.
-// Retorna false si el navegador no dejó guardar.
 function persistirEstado() {
   const guardoRescatados = guardarLocal(CLAVE_RESCATADOS, rescatados);
   const guardoSalidas = guardarLocal(CLAVE_SALIDAS, salidas);
@@ -160,7 +142,6 @@ function persistirEstado() {
   return guardoRescatados && guardoSalidas;
 }
 
-// Borra lo guardado y vuelve a dejar el refugio como el primer día.
 function reiniciarRefugio() {
   vaciarAlmacenamiento();
 
@@ -174,7 +155,6 @@ function reiniciarRefugio() {
    CONSULTAS SOBRE EL ARRAY
    ------------------------------------------------------------ */
 
-// Los rescatados que coinciden con lo escrito en el buscador.
 function filtrarPorTexto(lista, texto) {
   const buscado = texto.trim().toLowerCase();
 
@@ -185,25 +165,19 @@ function filtrarPorTexto(lista, texto) {
   return lista.filter((rescatado) => rescatado.nombre.toLowerCase().includes(buscado));
 }
 
-// Busca un rescatado por su id.
 function buscarPorId(lista, id) {
   return lista.find((rescatado) => rescatado.id === id);
 }
 
-// Busca un rescatado por su nombre.
 function buscarPorNombre(lista, nombre) {
   const buscado = nombre.trim().toLowerCase();
   return lista.find((rescatado) => rescatado.nombre.toLowerCase() === buscado);
 }
 
-// Calcula el id que le toca al próximo ingreso: el más alto que haya,
-// más uno.
 function generarId(lista) {
   return lista.reduce((mayor, rescatado) => Math.max(mayor, rescatado.id), 0) + 1;
 }
 
-// Junta en un solo objeto los números que se muestran en la barra
-// superior del refugio.
 function calcularEstadisticas(lista) {
   return lista.reduce(
     (resumen, rescatado) => {
@@ -222,7 +196,54 @@ function calcularEstadisticas(lista) {
   );
 }
 
-// Devuelve la lista que corresponde mostrar según el buscador.
 function obtenerListaVisible() {
   return filtrarPorTexto(rescatados, textoBusqueda);
+}
+
+/* ------------------------------------------------------------
+   CARGA DE FOTOS DESDE UNA API EXTERNA
+   Consulta la API pública Dog CEO para obtener fotos aleatorias de
+   perros y asignarlas a los rescatados que todavía no tienen. La
+   petición no bloquea el simulador: si falla, las tarjetas se muestran
+   sin foto y el usuario recibe un aviso.
+   ------------------------------------------------------------ */
+
+async function cargarFotosDesdeAPI() {
+  const sinFoto = rescatados.filter((r) => r.foto === "");
+
+  if (sinFoto.length === 0) {
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      "https://dog.ceo/api/breeds/image/random/" + sinFoto.length
+    );
+
+    if (!response.ok) {
+      throw new Error("La API respondió con estado " + response.status);
+    }
+
+    const datos = await response.json();
+
+    // La API devuelve { status: "success", message: [url, url, ...] }
+    if (datos.status !== "success" || !Array.isArray(datos.message)) {
+      throw new Error("El formato de la respuesta no es el esperado");
+    }
+
+    sinFoto.forEach((rescatado, indice) => {
+      rescatado.foto = datos.message[indice] ?? "";
+    });
+
+    persistirEstado();
+    return true;
+  } catch (error) {
+    // Las fotos son un complemento visual: si la API falla, el
+    // simulador sigue funcionando sin problema.
+    throw error;
+  } finally {
+    // Tanto si las fotos llegaron como si no, la pantalla se actualiza
+    // para reflejar el estado actual.
+    actualizarVista();
+  }
 }

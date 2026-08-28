@@ -1,0 +1,177 @@
+// Contenedor
+.wrap {
+  width: min(100% - 2.4rem, 1180px);
+  margin-inline: auto;
+}
+
+// ---- HEADER ----
+.site-header {
+  background: rgba($bg, .82);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba($dark, .06);
+
+  .nav {
+    @include flex-between;
+    gap: 1rem;
+    padding: .7rem 0;
+  }
+
+  .nav__logo img { height:52px; width:auto; }
+
+  .nav__menu {
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+
+    a {
+      font-weight: 600;
+      font-size: .97rem;
+      color: $mid;
+      padding: .5rem .85rem;
+      border-radius: $r-full;
+      transition: color $t, background $t;
+
+      &:hover, &[aria-current=page] {
+        color: $teal-dark;
+        background: $teal-light;
+      }
+    }
+  }
+
+  .nav__cta {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+
+    .btn { padding:.6rem 1.15rem; font-size:.95rem; }
+  }
+
+  .nav__burger {
+    display: none;
+    place-items: center;
+    width: 46px; height: 46px;
+    border: none;
+    border-radius: $r-sm;
+    background: $teal-light;
+    color: $teal-dark;
+  }
+
+  // Mobile
+  @include sm {
+    .nav__menu { display:none; }
+    .nav__cta .btn span { display:none; }
+    .nav__burger { display:grid; }
+  }
+
+  // Menú abierto en mobile
+  .nav__mobile {
+    display: none;
+    flex-direction: column;
+    gap: .3rem;
+    padding: .75rem 0 1rem;
+    border-top: 1px solid rgba($dark, .06);
+
+    &.open { display:flex; }
+
+    a {
+      font-weight: 600;
+      font-size: 1rem;
+      color: $mid;
+      padding: .6rem 1rem;
+      border-radius: $r-sm;
+      transition: color $t, background $t;
+
+      &:hover, &[aria-current=page] {
+        color: $teal-dark;
+        background: $teal-light;
+      }
+    }
+  }
+}
+
+// ---- FOOTER ----
+.site-footer {
+  background: $dark;
+  color: #EDE7DE;
+  padding: clamp(2.5rem,5vw,3.5rem) 0 1.5rem;
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+
+    @include md { grid-template-columns:1fr 1fr; }
+    @include sm { grid-template-columns:1fr; }
+  }
+
+  &__brand {
+    > img {
+      height: 84px; width:auto;
+      margin-bottom: .8rem;
+      background: $bg;
+      padding: .5rem .9rem;
+      border-radius: $r-sm;
+    }
+    p { color:#C7BFB4; font-size:.95rem; max-width:34ch; }
+  }
+
+  h4 {
+    font-family: $ff-display;
+    font-weight: 500;
+    font-size: 1.05rem;
+    margin-bottom: .8rem;
+    color: $white;
+  }
+
+  ul  { display:grid; gap:.45rem; }
+  a   { color:#C7BFB4; font-size:.95rem; transition:color $t; &:hover { color:$honey; } }
+
+  .socials {
+    display: flex;
+    gap: .75rem;
+    margin-top: 1rem;
+
+    a {
+      @include flex-center;
+      width:48px; height:48px;
+      border-radius: $r-sm;
+      background: $teal-light;
+      transition: transform $t, box-shadow $t;
+
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 20px rgba(0,0,0,.2);
+      }
+
+      img { width:40px; height:40px; flex-shrink: 0;}
+    }
+
+    // WhatsApp y teléfono: color verde sobre fondo claro
+    a.social--mono img { filter: none; }
+  }
+
+  &__bottom {
+    border-top: 1px solid rgba($white,.1);
+    padding-top: 1.3rem;
+    text-align: center;
+    color: #9C948A;
+    font-size: .86rem;
+  }
+}
+
+// WhatsApp flotante
+.wsp-float {
+  position: fixed;
+  right: 1.3rem; bottom: 1.3rem;
+  z-index: 60;
+  @include flex-center;
+  width:58px; height:58px;
+  border-radius: 50%;
+  background: #25D366;
+  box-shadow: 0 12px 28px rgba(37,211,102,.45);
+  transition: transform $t;
+
+  &:hover { transform:scale(1.08) translateY(-2px); }
+  img { width:30px; height:30px; }
+}

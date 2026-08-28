@@ -1,5 +1,5 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 9
+   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 10
    avisos.js · El rescatado de la semana
 
    El refugio elige cada semana un perro para difundir y buscarle
@@ -54,8 +54,8 @@ async function cargarDestacadoDeLaSemana() {
     const { rescatado, esperando, cuota } = await obtenerDestacadoDeLaSemana();
 
     renderizarDestacado(rescatado, esperando, cuota);
-    mostrarMensaje(
-      "Esta semana difundimos a " + rescatado.nombre + ". Puedes apadrinarlo desde su ficha. 🐾",
+    notificar(
+      "Esta semana difundimos a " + rescatado.nombre + ". Puedes apadrinarlo desde su ficha.",
       "info"
     );
   } catch (error) {
