@@ -1,5 +1,5 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 10
+   SOCIEDAD PATITAS · Refugio canino · Entrega Final
    main.js · Eventos y arranque
 
    El punto de entrada. Conecta lo que hace el usuario con la lógica
@@ -294,7 +294,7 @@ async function manejarReinicio() {
     return;
   }
 
-  reiniciarRefugio();
+  await reiniciarRefugio();
 
   solicitudActual = null;
   textoBusqueda = "";
@@ -367,20 +367,25 @@ function armarMensajeDeBienvenida() {
 
 /* ------------------------------------------------------------
    3) ARRANQUE
+   El inicio es async porque los datos del refugio pueden venir
+   de data/rescatados.json si es la primera visita del usuario.
    ------------------------------------------------------------ */
-renderizarPreguntas();
-actualizarVista();
+async function arrancar() {
+  await iniciarRefugio();
 
-solicitudActual && renderizarResultado(solicitudActual);
-solicitudActual && repoblarFormularioSolicitud(solicitudActual);
+  renderizarPreguntas();
+  actualizarVista();
 
-notificar(armarMensajeDeBienvenida(), "info");
+  solicitudActual && renderizarResultado(solicitudActual);
+  solicitudActual && repoblarFormularioSolicitud(solicitudActual);
 
-cargarDestacadoDeLaSemana();
+  notificar(armarMensajeDeBienvenida(), "info");
 
-// Pide las fotos a la API Dog CEO. El try/catch/finally está en
-// cargarFotosDesdeAPI (datos.js): aquí solo se captura el rechazo
-// para avisarle al usuario sin romper nada.
-cargarFotosDesdeAPI().catch(function (error) {
-  notificar("No se pudieron cargar las fotos: " + error.message, "error");
-});
+  cargarDestacadoDeLaSemana();
+
+  // Pide las fotos a la API Dog CEO. Si la petición falla, las
+  // tarjetas se muestran sin foto y el usuario recibe un aviso.
+  cargarFotosDesdeAPI();
+}
+
+arrancar();

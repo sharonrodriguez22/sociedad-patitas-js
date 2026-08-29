@@ -1,5 +1,5 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 10
+   SOCIEDAD PATITAS · Refugio canino · Entrega Final
    avisos.js · El rescatado de la semana
 
    El refugio elige cada semana un perro para difundir y buscarle

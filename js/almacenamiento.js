@@ -1,5 +1,5 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 10
+   SOCIEDAD PATITAS · Refugio canino · Entrega Final
    almacenamiento.js · La memoria del navegador
 
    Toda la conversación con el Web Storage pasa por este archivo.

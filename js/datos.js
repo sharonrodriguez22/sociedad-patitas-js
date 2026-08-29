@@ -1,28 +1,32 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 10
+   SOCIEDAD PATITAS · Refugio canino · Entrega Final
    datos.js · El array de objetos, su memoria y sus consultas
 
    La capa de datos del simulador. Al cargar la página levanta el
    estado guardado en el navegador; si no hay nada guardado, arranca
-   con los perros iniciales. Después de cada cambio vuelve a guardar.
+   con los perros del archivo data/rescatados.json. Después de cada
+   cambio vuelve a guardar.
 
    Ninguna función de este archivo toca el DOM.
    ============================================================ */
 
 /* ------------------------------------------------------------
    1) LOS PERROS CON LOS QUE ABRE EL REFUGIO
-   Solo se usan la primera vez, o cuando se reinicia el simulador.
+   Se cargan desde data/rescatados.json con fetch. Solo se usan
+   la primera vez o cuando se reinicia el simulador.
    ------------------------------------------------------------ */
-function crearRescatadosIniciales() {
-  const rocco = new Rescatado(1, "Rocco", "macho", 3, "grande", 25000);
-  const luna = new Rescatado(2, "Luna", "hembra", 2, "chico", 12000);
-  const pelusa = new Rescatado(3, "Pelusa", "hembra", 1, "mediano", 18000);
-  const nube = new Rescatado(4, "Nube", "hembra", 5, "chico", 14000);
-  const tobias = new Rescatado(5, "Tobías", "macho", 7, "mediano", 21000);
-  const nina = new Rescatado(6, "Nina", "hembra", 1, "chico", 15000);
-  const milo = new Rescatado(7, "Milo", "macho", 4, "mediano", 16000);
+async function cargarRescatadosDesdeJSON() {
+  const response = await fetch("../data/rescatados.json");
 
-  return [rocco, luna, pelusa, nube, tobias, nina, milo];
+  if (!response.ok) {
+    throw new Error("No se pudo cargar rescatados.json (estado " + response.status + ")");
+  }
+
+  const datos = await response.json();
+
+  return datos.map(({ id, nombre, sexo, edad, tamanio, costoMensual }) =>
+    new Rescatado(id, nombre, sexo, edad, tamanio, costoMensual)
+  );
 }
 
 /* ------------------------------------------------------------
@@ -77,9 +81,14 @@ function rehidratarSolicitud(datos) {
    3) CARGA DEL ESTADO
    ------------------------------------------------------------ */
 
-function cargarRescatados() {
+async function cargarRescatados() {
   const guardados = leerLocal(CLAVE_RESCATADOS);
-  return guardados?.map(rehidratarRescatado) ?? crearRescatadosIniciales();
+
+  if (guardados) {
+    return guardados.map(rehidratarRescatado);
+  }
+
+  return await cargarRescatadosDesdeJSON();
 }
 
 function cargarSalidas() {
@@ -99,8 +108,10 @@ function cargarSolicitud() {
 
 /* ------------------------------------------------------------
    4) EL ESTADO VIVO
+   Se inicializa vacío y se llena en iniciarRefugio(), que es async
+   porque la primera carga puede venir del .json via fetch.
    ------------------------------------------------------------ */
-const rescatados = cargarRescatados();
+const rescatados = [];
 
 /* ------------------------------------------------------------
    REGISTRO DE SALIDAS
@@ -142,11 +153,13 @@ function persistirEstado() {
   return guardoRescatados && guardoSalidas;
 }
 
-function reiniciarRefugio() {
+async function reiniciarRefugio() {
   vaciarAlmacenamiento();
 
+  const iniciales = await cargarRescatadosDesdeJSON();
+
   rescatados.length = 0;
-  rescatados.push(...crearRescatadosIniciales());
+  rescatados.push(...iniciales);
 
   salidas.length = 0;
 }
@@ -239,11 +252,25 @@ async function cargarFotosDesdeAPI() {
     return true;
   } catch (error) {
     // Las fotos son un complemento visual: si la API falla, el
-    // simulador sigue funcionando sin problema.
-    throw error;
+    // simulador sigue funcionando sin problema. No se relanza el
+    // error porque el llamador ya muestra un mensaje al usuario.
   } finally {
     // Tanto si las fotos llegaron como si no, la pantalla se actualiza
     // para reflejar el estado actual.
     actualizarVista();
+  }
+}
+
+/* ------------------------------------------------------------
+   ARRANQUE DEL REFUGIO
+   Carga los rescatados (del navegador o del .json) y deja el
+   array listo. Se llama desde main.js al iniciar la aplicación.
+   ------------------------------------------------------------ */
+async function iniciarRefugio() {
+  try {
+    const cargados = await cargarRescatados();
+    rescatados.push(...cargados);
+  } catch (error) {
+    notificar("No se pudieron cargar los datos del refugio: " + error.message, "error");
   }
 }

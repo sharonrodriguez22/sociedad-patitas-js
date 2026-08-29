@@ -1,0 +1,9 @@
+[
+  { "id": 1, "nombre": "Rocco",  "sexo": "macho",  "edad": 3, "tamanio": "grande",  "costoMensual": 25000 },
+  { "id": 2, "nombre": "Luna",   "sexo": "hembra", "edad": 2, "tamanio": "chico",   "costoMensual": 12000 },
+  { "id": 3, "nombre": "Pelusa", "sexo": "hembra", "edad": 1, "tamanio": "mediano", "costoMensual": 18000 },
+  { "id": 4, "nombre": "Nube",   "sexo": "hembra", "edad": 5, "tamanio": "chico",   "costoMensual": 14000 },
+  { "id": 5, "nombre": "Tobías", "sexo": "macho",  "edad": 7, "tamanio": "mediano", "costoMensual": 21000 },
+  { "id": 6, "nombre": "Nina",   "sexo": "hembra", "edad": 1, "tamanio": "chico",   "costoMensual": 15000 },
+  { "id": 7, "nombre": "Milo",   "sexo": "macho",  "edad": 4, "tamanio": "mediano", "costoMensual": 16000 }
+]

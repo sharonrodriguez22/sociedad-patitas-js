@@ -1,5 +1,5 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 10
+   SOCIEDAD PATITAS · Refugio canino · Entrega Final
    clases/Solicitud.js · La clase Solicitud
 
    Modela la postulación de cada persona que quiere adoptar: guarda

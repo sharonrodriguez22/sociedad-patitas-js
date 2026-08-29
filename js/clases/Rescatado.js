@@ -1,5 +1,5 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 10
+   SOCIEDAD PATITAS · Refugio canino · Entrega final
    clases/Rescatado.js · La clase Rescatado
 
    Modela a cada perro del refugio: agrupa sus datos (propiedades)

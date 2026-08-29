@@ -1,5 +1,5 @@
 /* ============================================================
-   SOCIEDAD PATITAS · Refugio canino · Pre-Entrega 10
+   SOCIEDAD PATITAS · Refugio canino · Entrega Final
    vista.js · Todo lo que toca la pantalla
 
    Este archivo concentra el DOM: guarda las referencias a los nodos y
@@ -215,6 +215,7 @@ function plantillaBotonPadrinazgo(rescatado) {
 // Las imágenes vienen de la API Dog CEO y se cargan de forma asíncrona.
 function plantillaTarjeta(rescatado) {
   const { id, nombre, sexo, tamanio, costoMensual, reservado, apadrinado, foto } = rescatado;
+  const textoSexo = sexo || "sin dato";
 
   const claseReservada = reservado ? " tarjeta--reservada" : "";
   const claseResaltada = id === idResaltado ? " tarjeta--nueva" : "";
@@ -240,7 +241,7 @@ function plantillaTarjeta(rescatado) {
           <h3>${nombre}</h3>
           <span class="tag tag--${rescatado.estadoTexto()}">${rescatado.estadoTexto()}</span>
         </div>
-        <p class="tarjeta__meta">${sexo} · porte ${tamanio} · ${rescatado.textoEdad()} ${etiquetaCachorro} ${etiquetaPadrino}</p>
+        <p class="tarjeta__meta">${textoSexo} · porte ${tamanio} · ${rescatado.textoEdad()} ${etiquetaCachorro} ${etiquetaPadrino}</p>
         <p class="tarjeta__cost">Mantenimiento: ${enPesos(costoMensual)} por mes</p>
         <div class="tarjeta__actions">
           ${plantillaBotonAccion(rescatado)}
