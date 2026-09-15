@@ -1,0 +1,26 @@
+{
+  "name": "sociedad-patitas",
+  "version": "1.0.0",
+  "description": "Proyecto desarrollado como parte del curso de **Desarrollo de Aplicaciones** en **CoderHouse**, módulo de **JavaScript**.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sharonrodriguez22/sociedad-patitas-js.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/sharonrodriguez22/sociedad-patitas-js/issues"
+  },
+  "homepage": "https://github.com/sharonrodriguez22/sociedad-patitas-js#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "sweetalert2": "^11.26.25",
+    "toastify-js": "^1.12.0"
+  }
+}
