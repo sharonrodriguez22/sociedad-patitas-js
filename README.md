@@ -1,6 +1,6 @@
 # 🐾 Sociedad Patitas
 
-Aplicación web para una organización ficticia dedicada al rescate y adopción responsable de perros. Integra un **simulador de adopción** interactivo construido con JavaScript en la página de Adopciones del sitio y una **suite de tests end-to-end con Playwright**.
+Aplicación web para una organización ficticia dedicada al rescate y adopción responsable de perros. Integra un **simulador de adopción** interactivo construido con JavaScript vanilla en la página de Adopciones del sitio y una **suite de tests end-to-end con Playwright**.
 
 ## 📖 Descripción
 
