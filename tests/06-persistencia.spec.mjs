@@ -1,5 +1,5 @@
 /* ============================================================
-   Test 06 — Persistencia en localStorage
+   Test 06 - Persistencia en localStorage
 
    Verifica que los datos del simulador sobreviven a una
    recarga de la página. Se agrega un rescatado, se abre

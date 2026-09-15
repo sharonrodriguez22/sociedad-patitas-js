@@ -1,5 +1,5 @@
 /* ============================================================
-   Test 05 — Búsqueda y alta de rescatados
+   Test 05 - Búsqueda y alta de rescatados
 
    Verifica el filtro de búsqueda por nombre en tiempo real
    y el registro de un nuevo rescatado desde el formulario

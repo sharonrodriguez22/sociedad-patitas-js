@@ -1,5 +1,5 @@
 /* ============================================================
-   Test 02 — Estructura del simulador
+   Test 02 - Estructura del simulador
 
    Verifica que los elementos principales de la página estén
    presentes y visibles: los cuatro paneles del simulador,

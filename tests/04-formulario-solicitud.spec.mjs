@@ -1,5 +1,5 @@
 /* ============================================================
-   Test 04 — Formulario de solicitud de adopción
+   Test 04 - Formulario de solicitud de adopción
 
    Verifica la validación del formulario (campos vacíos) y el
    flujo completo: llenar los datos, responder el cuestionario,

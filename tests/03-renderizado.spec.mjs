@@ -1,5 +1,5 @@
 /* ============================================================
-   Test 03 — Renderizado dinámico
+   Test 03 - Renderizado dinámico
 
    Verifica que el simulador carga los datos desde
    rescatados.json y genera las tarjetas de los perros

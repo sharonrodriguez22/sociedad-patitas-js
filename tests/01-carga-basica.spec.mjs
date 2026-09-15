@@ -1,5 +1,5 @@
 /* ============================================================
-   Test 01 — Carga básica
+   Test 01 - Carga básica
 
    Verifica que la página de adopciones carga correctamente
    sin errores de JavaScript en la consola del navegador.
