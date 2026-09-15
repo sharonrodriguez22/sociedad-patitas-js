@@ -37,7 +37,7 @@ El JavaScript está separado en **8 módulos por responsabilidad**, sin bundler 
 
 ## 🧪 Tests end-to-end (Playwright)
 
-El proyecto incluye **10 tests automatizados** que verifican el simulador en un navegador real (Chromium). La suite levanta un servidor HTTP local, redirige las librerías CDN a copias en `node_modules` y ejecuta cada prueba de forma aislada.
+El proyecto incluye **17 tests automatizados** que verifican el simulador en un navegador real (Chromium), priorizando los flujos críticos del usuario. La suite levanta un servidor HTTP local, redirige las librerías CDN a copias en `node_modules` y ejecuta cada prueba de forma aislada.
 
 | Archivo | Tests | Qué verifica |
 |---|---|---|
@@ -47,6 +47,10 @@ El proyecto incluye **10 tests automatizados** que verifican el simulador en un 
 | `04-formulario-solicitud` | 2 | El formulario vacío muestra errores de validación. El formulario completo se evalúa y muestra el resultado. |
 | `05-busqueda-y-alta` | 2 | El filtro oculta tarjetas que no coinciden. El alta agrega un nuevo rescatado a la lista. |
 | `06-persistencia` | 1 | Los datos en localStorage sobreviven a una recarga de la página. |
+| `07-adopcion` | 1 | Solicitud aprobada → adoptar un perro → confirmar → el perro sale de la lista y queda en el registro de salidas. |
+| `08-padrinazgo` | 2 | Apadrinar sin nombre muestra error. Apadrinar con nombre válido actualiza la tarjeta. |
+| `09-reinicio` | 1 | Agregar un perro → reiniciar el refugio → confirmar → vuelven los 7 originales y el registro se oculta. |
+| `10-reserva-transito-rechazo` | 3 | Solicitud preaprobada permite reservar. Tránsito saca al perro de la lista. Solicitud rechazada bloquea adopción y reserva. |
 
 **Infraestructura de testing:** los tests no dependen de internet. Un servidor local (`tests/helpers/servidor.mjs`) sirve los archivos del proyecto, y un interceptor de rutas (`tests/helpers/cdn.mjs`) redirige las peticiones a SweetAlert2 y Toastify hacia copias instaladas localmente. Esto permite ejecutar la suite offline y evita fallos por latencia o caída de CDN.
 
@@ -90,7 +94,11 @@ El proyecto incluye **10 tests automatizados** que verifican el simulador en un 
 │   ├── 03-renderizado.spec.mjs
 │   ├── 04-formulario-solicitud.spec.mjs
 │   ├── 05-busqueda-y-alta.spec.mjs
-│   └── 06-persistencia.spec.mjs
+│   ├── 06-persistencia.spec.mjs
+│   ├── 07-adopcion.spec.mjs
+│   ├── 08-padrinazgo.spec.mjs
+│   ├── 09-reinicio.spec.mjs
+│   └── 10-reserva-transito-rechazo.spec.mjs
 ├── page/
 │   ├── adopciones.html    ← Simulador de adopción
 │   ├── servicios.html
